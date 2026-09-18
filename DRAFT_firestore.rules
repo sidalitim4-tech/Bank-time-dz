@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common Primitives
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && 
+        request.auth.token.email == 'farouqse13@gmail.com' && 
+        request.auth.token.email_verified == true;
+    }
+
+    // Volunteers
+    function isValidVolunteer(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'youthCenter', 'balanceHours', 'totalVolunteeredHours']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 100 &&
+        data.youthCenter is string && data.youthCenter.size() <= 100 &&
+        data.balanceHours is number && data.balanceHours >= 0 && data.balanceHours <= 100000 &&
+        data.totalVolunteeredHours is number && data.totalVolunteeredHours >= 0 && data.totalVolunteeredHours <= 100000 &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+        (!('wilaya' in data) || (data.wilaya is string && data.wilaya.size() <= 50)) &&
+        (!('skills' in data) || (data.skills is list && data.skills.size() <= 30)) &&
+        (!('tier' in data) || (data.tier is string && data.tier.size() <= 50)) &&
+        (!('status' in data) || (data.status in ['نشط', 'معطل']));
+    }
+
+    match /volunteers/{volunteerId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(volunteerId) && isValidVolunteer(incoming()) && 
+        (request.auth.uid == volunteerId || isAdmin());
+      allow update: if isSignedIn() && isValidId(volunteerId) && isValidVolunteer(incoming()) &&
+        (request.auth.uid == volunteerId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Opportunities
+    function isValidOpportunity(data) {
+      return data.keys().hasAll(['id', 'title', 'youthCenter', 'category', 'durationHours', 'requiredVolunteers', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+        data.youthCenter is string && data.youthCenter.size() <= 100 &&
+        data.category is string && data.category.size() <= 50 &&
+        data.durationHours is number && data.durationHours > 0 && data.durationHours <= 100 &&
+        data.requiredVolunteers is number && data.requiredVolunteers > 0 && data.requiredVolunteers <= 1000 &&
+        data.status in ['مفتوحة', 'مكتملة', 'منتهية', 'معطلة'] &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 2000)) &&
+        (!('location' in data) || (data.location is string && data.location.size() <= 150)) &&
+        (!('organization' in data) || (data.organization is string && data.organization.size() <= 100)) &&
+        (!('registeredVolunteerIds' in data) || (data.registeredVolunteerIds is list && data.registeredVolunteerIds.size() <= 500)) &&
+        (!('creatorVolunteerId' in data) || (data.creatorVolunteerId is string && data.creatorVolunteerId.size() <= 128)) &&
+        (!('creatorVolunteerName' in data) || (data.creatorVolunteerName is string && data.creatorVolunteerName.size() <= 100));
+    }
+
+    match /opportunities/{opportunityId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && isValidId(opportunityId) && isValidOpportunity(incoming()) &&
+        (incoming().creatorVolunteerId == request.auth.uid || isAdmin());
+      allow update: if isSignedIn() && isValidId(opportunityId) && isValidOpportunity(incoming()) &&
+        (
+          isAdmin() ||
+          (existing().creatorVolunteerId == request.auth.uid) ||
+          (incoming().diff(existing()).affectedKeys().hasOnly(['registeredVolunteerIds']))
+        );
+      allow delete: if isAdmin() || (isSignedIn() && existing().creatorVolunteerId == request.auth.uid);
+    }
+
+    // Transactions
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['id', 'volunteerId', 'hours', 'type', 'date', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.volunteerId is string && data.volunteerId.size() <= 128 &&
+        data.hours is number && data.hours > 0 && data.hours <= 1000 &&
+        data.type in ['EARNED', 'REDEEMED'] &&
+        data.date is string && data.date.size() <= 50 &&
+        data.status in ['معتمد', 'قيد المراجعة'] &&
+        (!('volunteerName' in data) || (data.volunteerName is string && data.volunteerName.size() <= 100)) &&
+        (!('activityTitle' in data) || (data.activityTitle is string && data.activityTitle.size() <= 200)) &&
+        (!('perkName' in data) || (data.perkName is string && data.perkName.size() <= 150)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        (!('verifiedBy' in data) || (data.verifiedBy is string && data.verifiedBy.size() <= 100));
+    }
+
+    match /transactions/{transactionId} {
+      allow get: if isSignedIn() && (resource.data.volunteerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.volunteerId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(transactionId) && isValidTransaction(incoming()) &&
+        (incoming().volunteerId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Perks
+    function isValidPerk(data) {
+      return data.keys().hasAll(['id', 'title', 'costHours', 'provider']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.title is string && data.title.size() <= 150 &&
+        data.costHours is number && data.costHours >= 0 && data.costHours <= 1000 &&
+        data.provider is string && data.provider.size() <= 100;
+    }
+
+    match /perks/{perkId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin() && isValidId(perkId) && isValidPerk(incoming());
+      allow update: if isAdmin() && isValidId(perkId) && isValidPerk(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // Certificates
+    function isValidCertificate(data) {
+      return data.keys().hasAll(['id', 'serialNumber', 'volunteerName', 'volunteerId', 'totalHours', 'issueDate', 'issuedBy']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.serialNumber is string && data.serialNumber.size() <= 100 &&
+        data.volunteerName is string && data.volunteerName.size() <= 100 &&
+        data.volunteerId is string && data.volunteerId.size() <= 128 &&
+        data.totalHours is number && data.totalHours > 0 && data.totalHours <= 100000 &&
+        data.issueDate is string && data.issueDate.size() <= 50 &&
+        data.issuedBy is string && data.issuedBy.size() <= 200 &&
+        (!('activityCampaign' in data) || (data.activityCampaign is string && data.activityCampaign.size() <= 200)) &&
+        (!('qrHash' in data) || (data.qrHash is string && data.qrHash.size() <= 200));
+    }
+
+    match /certificates/{certificateId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && isValidId(certificateId) && isValidCertificate(incoming()) &&
+        (incoming().volunteerId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

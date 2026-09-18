@@ -1,0 +1,6 @@
+{
+  "name": "بنك الوقت التطوعي",
+  "description": "منصة بنك الوقت التطوعي للشباب لتبادل ساعات التطوع كرصيد والحصول على امتيازات رمزية - شباب واع - دار الشباب الروينة (عين الدفلى)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

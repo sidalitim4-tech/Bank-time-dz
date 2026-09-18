@@ -1,0 +1,368 @@
+{
+  "entities": {
+    "Volunteer": {
+      "title": "Volunteer",
+      "description": "Registered volunteer profile in Dar El Chabab Rouina Timebank",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the volunteer",
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the volunteer",
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of volunteer",
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of volunteer",
+          "maxLength": 100
+        },
+        "age": {
+          "type": "number",
+          "description": "Age of the volunteer"
+        },
+        "youthCenter": {
+          "type": "string",
+          "description": "Youth center name",
+          "maxLength": 100
+        },
+        "wilaya": {
+          "type": "string",
+          "description": "Wilaya name",
+          "maxLength": 50
+        },
+        "monthlyPledgedHours": {
+          "type": "number",
+          "description": "Pledged volunteering hours per month"
+        },
+        "balanceHours": {
+          "type": "number",
+          "description": "Current spendable timebank balance in hours"
+        },
+        "totalVolunteeredHours": {
+          "type": "number",
+          "description": "Lifetime volunteering hours completed"
+        },
+        "skills": {
+          "type": "array",
+          "description": "List of skills and interests"
+        },
+        "joinedDate": {
+          "type": "string",
+          "description": "Date the volunteer registered",
+          "maxLength": 50
+        },
+        "avatarBg": {
+          "type": "string",
+          "description": "Tailwind color class for avatar background",
+          "maxLength": 50
+        },
+        "tier": {
+          "type": "string",
+          "description": "Volunteer badge tier",
+          "enum": ["متطوع برونزي", "متطوع فضي", "متطوع ذهبي", "سفير التطوع"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Account status",
+          "enum": ["نشط", "معطل"]
+        }
+      },
+      "required": ["id", "name", "email", "youthCenter", "balanceHours", "totalVolunteeredHours"]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "Volunteering activity opportunity or campaign",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the opportunity",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the volunteering initiative",
+          "maxLength": 200
+        },
+        "organization": {
+          "type": "string",
+          "description": "Organizing association or youth center",
+          "maxLength": 100
+        },
+        "youthCenter": {
+          "type": "string",
+          "description": "Host youth center",
+          "maxLength": 100
+        },
+        "wilaya": {
+          "type": "string",
+          "description": "Wilaya where activity occurs",
+          "maxLength": 50
+        },
+        "location": {
+          "type": "string",
+          "description": "Field location description",
+          "maxLength": 150
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of voluntary work",
+          "maxLength": 50
+        },
+        "description": {
+          "type": "string",
+          "description": "Full description of work to be performed",
+          "maxLength": 2000
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of activity",
+          "maxLength": 50
+        },
+        "time": {
+          "type": "string",
+          "description": "Time of activity",
+          "maxLength": 50
+        },
+        "durationHours": {
+          "type": "number",
+          "description": "Duration in hours to credit each participant"
+        },
+        "requiredVolunteers": {
+          "type": "number",
+          "description": "Target number of volunteers needed"
+        },
+        "registeredVolunteerIds": {
+          "type": "array",
+          "description": "Array of volunteer IDs participating"
+        },
+        "status": {
+          "type": "string",
+          "description": "Campaign status",
+          "enum": ["مفتوحة", "مكتملة", "منتهية", "معطلة"]
+        },
+        "isPilotAinDefla": {
+          "type": "boolean",
+          "description": "Flag for pilot Ain Defla network initiatives"
+        },
+        "creatorVolunteerId": {
+          "type": "string",
+          "description": "ID of volunteer supervisor who created initiative",
+          "maxLength": 128
+        },
+        "creatorVolunteerName": {
+          "type": "string",
+          "description": "Name of volunteer supervisor",
+          "maxLength": 100
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "Completion timestamp when campaign finished",
+          "maxLength": 50
+        }
+      },
+      "required": ["id", "title", "youthCenter", "category", "durationHours", "requiredVolunteers", "status"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Time ledger transaction (deposit or withdrawal)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ledger entry ID",
+          "maxLength": 128
+        },
+        "volunteerId": {
+          "type": "string",
+          "description": "Volunteer whose balance changed",
+          "maxLength": 128
+        },
+        "volunteerName": {
+          "type": "string",
+          "description": "Name of the volunteer",
+          "maxLength": 100
+        },
+        "activityTitle": {
+          "type": "string",
+          "description": "Activity or reward title",
+          "maxLength": 200
+        },
+        "hours": {
+          "type": "number",
+          "description": "Number of hours credited or debited"
+        },
+        "type": {
+          "type": "string",
+          "description": "Ledger entry type",
+          "enum": ["EARNED", "REDEEMED"]
+        },
+        "date": {
+          "type": "string",
+          "description": "Date recorded",
+          "maxLength": 50
+        },
+        "status": {
+          "type": "string",
+          "description": "Approval status",
+          "enum": ["معتمد", "قيد المراجعة"]
+        },
+        "perkName": {
+          "type": "string",
+          "description": "Optional redeemed perk name",
+          "maxLength": 150
+        },
+        "notes": {
+          "type": "string",
+          "description": "Audit notes or verification details",
+          "maxLength": 500
+        },
+        "verifiedBy": {
+          "type": "string",
+          "description": "Entity that approved the transaction",
+          "maxLength": 100
+        }
+      },
+      "required": ["id", "volunteerId", "hours", "type", "date", "status"]
+    },
+    "Perk": {
+      "title": "Perk",
+      "description": "Institutional benefit, workshop, or certificate available in exchange for hours",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Perk ID",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Perk title",
+          "maxLength": 150
+        },
+        "description": {
+          "type": "string",
+          "description": "Perk details",
+          "maxLength": 500
+        },
+        "costHours": {
+          "type": "number",
+          "description": "Hours required to redeem"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the benefit",
+          "maxLength": 50
+        },
+        "provider": {
+          "type": "string",
+          "description": "Institution offering the perk",
+          "maxLength": 100
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon identifier",
+          "maxLength": 50
+        },
+        "badgeText": {
+          "type": "string",
+          "description": "Badge highlight",
+          "maxLength": 50
+        },
+        "availableCount": {
+          "type": "number",
+          "description": "Remaining slots or seats available"
+        },
+        "perkType": {
+          "type": "string",
+          "description": "Type of perk",
+          "maxLength": 50
+        }
+      },
+      "required": ["id", "title", "costHours", "provider"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Official volunteer service credential with QR hash",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Certificate ID",
+          "maxLength": 128
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "Official registration code",
+          "maxLength": 100
+        },
+        "volunteerName": {
+          "type": "string",
+          "description": "Volunteer full name",
+          "maxLength": 100
+        },
+        "volunteerId": {
+          "type": "string",
+          "description": "Volunteer unique ID",
+          "maxLength": 128
+        },
+        "totalHours": {
+          "type": "number",
+          "description": "Hours certified"
+        },
+        "activityCampaign": {
+          "type": "string",
+          "description": "Field campaign name",
+          "maxLength": 200
+        },
+        "issueDate": {
+          "type": "string",
+          "description": "Date of certification issue",
+          "maxLength": 50
+        },
+        "issuedBy": {
+          "type": "string",
+          "description": "Issuing institution",
+          "maxLength": 200
+        },
+        "qrHash": {
+          "type": "string",
+          "description": "Digital verification signature hash",
+          "maxLength": 200
+        }
+      },
+      "required": ["id", "serialNumber", "volunteerName", "volunteerId", "totalHours", "issueDate", "issuedBy"]
+    }
+  },
+  "firestore": {
+    "/volunteers/{volunteerId}": {
+      "schema": "Volunteer",
+      "description": "Volunteers registered in Dar El Chabab Rouina"
+    },
+    "/opportunities/{opportunityId}": {
+      "schema": "Opportunity",
+      "description": "Volunteering initiatives and field campaigns"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Ledger entries of earned and redeemed hours"
+    },
+    "/perks/{perkId}": {
+      "schema": "Perk",
+      "description": "Institutional rewards and privileges redeemable for volunteer hours"
+    },
+    "/certificates/{certificateId}": {
+      "schema": "Certificate",
+      "description": "Certified volunteer certificates issued with QR validation"
+    }
+  }
+}
