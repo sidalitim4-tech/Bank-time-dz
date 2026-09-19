@@ -174,55 +174,34 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
             />
           </div>
 
-          {/* Quick Participants Preview & Modal Trigger */}
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setShowParticipantsModal(true)}
-              className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200/80 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 shadow-2xs"
-              title="عرض قائمة المنضمين للمبادرة مع أرقام هواتفهم"
-            >
-              <Users className="w-3.5 h-3.5 text-emerald-600" />
-              <span>
-                {activity.registeredVolunteerIds.length > 0
-                  ? `المنضمون (${activity.registeredVolunteerIds.length}) • إظهار الأسماء والهواتف`
-                  : 'قائمة المنضمين (0)'}
-              </span>
-            </button>
-
-            <span className="text-[10px] text-slate-400">
-              نسبة التسجيل: {percentFilled}%
-            </span>
-          </div>
-
-          {/* Mini participant chips */}
-          {activity.registeredVolunteerIds.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              {activity.registeredVolunteerIds.slice(0, 3).map((id) => {
-                const vol = volunteers.find((v) => v.id === id);
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setShowParticipantsModal(true)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-medium border border-slate-200 transition"
-                  >
-                    <span className="font-semibold">{vol ? vol.name : 'متطوع'}</span>
-                    {vol?.phone && (
-                      <span className="text-emerald-700 font-mono text-[9px]">({vol.phone})</span>
-                    )}
-                  </button>
-                );
-              })}
-              {activity.registeredVolunteerIds.length > 3 && (
+          {/* Only Admin can view volunteer details / phone numbers. For public/volunteers, only show general progress count */}
+          {isAdminMode ? (
+            <div className="mt-2.5 pt-2 border-t border-slate-100/80">
+              <div className="flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => setShowParticipantsModal(true)}
-                  className="text-[10px] font-bold text-emerald-700 hover:underline"
+                  className="text-[11px] font-bold text-slate-800 hover:text-white bg-slate-100 hover:bg-slate-900 border border-slate-200 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-2xs"
+                  title="عرض بيانات وهواتف المتطوعين المسجلين (خاص بإدارة دار الشباب)"
                 >
-                  +{activity.registeredVolunteerIds.length - 3} آخرين...
+                  <Users className="w-3.5 h-3.5 text-amber-500" />
+                  <span>
+                    {activity.registeredVolunteerIds.length > 0
+                      ? `سجل المنضمين (${activity.registeredVolunteerIds.length}) • هواتف وأسماء`
+                      : 'سجل المنضمين (0)'}
+                  </span>
                 </button>
-              )}
+
+                <span className="text-[10px] text-slate-400">
+                  نسبة التسجيل: {percentFilled}%
+                </span>
+              </div>
+            </div>
+          ) : (
+            /* Public / Regular volunteers view: strictly numerical progress for privacy */
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+              <span>نسبة اكتمال العدد المطلوب: {percentFilled}%</span>
+              <span>{Math.max(0, activity.requiredVolunteers - activity.registeredVolunteerIds.length)} مقعد متاح</span>
             </div>
           )}
         </div>
