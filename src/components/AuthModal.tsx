@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, FormEvent } from 'react';
 import { Volunteer } from '../types';
-import { X, LogIn, UserPlus, Clock, CheckCircle2, Search, Sparkles } from 'lucide-react';
+import { X, LogIn, UserPlus, Clock, CheckCircle2, Search, Sparkles, Shield, AlertCircle, ArrowLeft } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup } from '../firebase';
 
 interface AuthModalProps {
@@ -10,6 +10,7 @@ interface AuthModalProps {
   onLogin: (volunteer: Volunteer) => void;
   onRegister: (volunteer: Volunteer) => void;
   initialTab?: 'login' | 'register';
+  onOpenAdminLogin?: () => void;
 }
 
 const AVAILABLE_SKILLS = [
@@ -30,6 +31,7 @@ export const AuthModal: FC<AuthModalProps> = ({
   onLogin,
   onRegister,
   initialTab = 'login',
+  onOpenAdminLogin,
 }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
 
@@ -42,6 +44,7 @@ export const AuthModal: FC<AuthModalProps> = ({
   // Login Tab States
   const [loginSearch, setLoginSearch] = useState('');
   const [selectedVolunteerId, setSelectedVolunteerId] = useState<string>(volunteers[0]?.id || '');
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // Register Tab States (for new people)
   const [name, setName] = useState('');
@@ -53,6 +56,25 @@ export const AuthModal: FC<AuthModalProps> = ({
   const [monthlyPledgedHours, setMonthlyPledgedHours] = useState(10);
   const [selectedSkills, setSelectedSkills] = useState<string[]>(['تشجير وبستنة', 'نظافة وتهيئة الفضاءات']);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-select first volunteer if list updates or search filters to 1
+  const cleanQuery = loginSearch.trim().toLowerCase().replace(/\s+/g, '');
+  const filteredVolunteersForLogin = volunteers.filter((v) => {
+    if (!cleanQuery) return true;
+    const vName = v.name.toLowerCase().replace(/\s+/g, '');
+    const vPhone = (v.phone || '').replace(/\s+/g, '');
+    const vEmail = (v.email || '').toLowerCase().replace(/\s+/g, '');
+    return vName.includes(cleanQuery) || vPhone.includes(cleanQuery) || vEmail.includes(cleanQuery);
+  });
+
+  useEffect(() => {
+    if (filteredVolunteersForLogin.length === 1) {
+      setSelectedVolunteerId(filteredVolunteersForLogin[0].id);
+    } else if (filteredVolunteersForLogin.length > 0 && !filteredVolunteersForLogin.some(v => v.id === selectedVolunteerId)) {
+      setSelectedVolunteerId(filteredVolunteersForLogin[0].id);
+    }
+  }, [loginSearch, volunteers.length]);
 
   if (!isOpen) return null;
 
@@ -63,7 +85,6 @@ export const AuthModal: FC<AuthModalProps> = ({
       const user = result.user;
       if (!user) return;
 
-      // Check if volunteer exists by email or uid
       const userEmail = user.email ? user.email.toLowerCase() : '';
       const existing = volunteers.find(
         (v) => (userEmail && v.email.toLowerCase() === userEmail) || v.id === user.uid
@@ -77,17 +98,16 @@ export const AuthModal: FC<AuthModalProps> = ({
         onLogin(existing);
         onClose();
       } else {
-        // Auto-create volunteer from Google profile
         const newVol: Volunteer = {
           id: user.uid,
-          name: user.displayName || userEmail.split('@')[0] || 'متطوع جديد',
+          name: user.displayName || (userEmail ? userEmail.split('@')[0] : 'متطوع جديد'),
           phone: user.phoneNumber || '0550 00 00 00',
           email: userEmail || `${user.uid}@example.dz`,
           age: 21,
           youthCenter: 'دار الشباب الروينة',
           wilaya: 'عين الدفلى',
           monthlyPledgedHours: 10,
-          balanceHours: 4, // Welcome 4 bonus hours
+          balanceHours: 4,
           totalVolunteeredHours: 4,
           skills: ['خدمة المجتمع', 'تنظيم وفعاليات'],
           joinedDate: new Date().toISOString().split('T')[0],
@@ -113,54 +133,81 @@ export const AuthModal: FC<AuthModalProps> = ({
     }
   };
 
-  const handleLoginSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const target = volunteers.find((v) => v.id === selectedVolunteerId);
-    if (target) {
-      if (target.status === 'معطل') {
-        alert('تنبيه: هذا الحساب معطل مؤقتاً بقرار إداري من دار الشباب الروينة. يرجى مراجعة إدارة المؤسسة.');
-        return;
-      }
-      onLogin(target);
-      onClose();
+  const performLogin = (target: Volunteer) => {
+    if (target.status === 'معطل') {
+      setLoginError('تنبيه: هذا الحساب معطل مؤقتاً بقرار إداري من دار الشباب الروينة.');
+      return;
     }
-  };
-
-  const handleRegisterSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    const newVol: Volunteer = {
-      id: `vol-${Date.now()}`,
-      name: name.trim(),
-      phone: phone || '0550 00 00 00',
-      email: email || `${name.trim().toLowerCase().replace(/\s+/g, '.')}@example.dz`,
-      age,
-      youthCenter,
-      wilaya,
-      monthlyPledgedHours,
-      balanceHours: 4, // Welcome 4 bonus hours
-      totalVolunteeredHours: 4,
-      skills: selectedSkills.length > 0 ? selectedSkills : ['خدمة المجتمع'],
-      joinedDate: new Date().toISOString().split('T')[0],
-      avatarBg: 'bg-emerald-600',
-      tier: 'متطوع برونزي',
-      status: 'نشط',
-    };
-
-    onRegister(newVol);
+    setLoginError(null);
+    onLogin(target);
     onClose();
   };
 
-  const filteredVolunteersForLogin = volunteers.filter(
-    (v) =>
-      v.name.toLowerCase().includes(loginSearch.toLowerCase()) ||
-      v.phone.includes(loginSearch)
-  );
+  const handleLoginSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+
+    // 1. Try currently selected ID
+    let target = volunteers.find((v) => v.id === selectedVolunteerId);
+
+    // 2. If not selected or user typed query, match directly by query
+    if (!target && loginSearch.trim()) {
+      const q = cleanQuery;
+      target = volunteers.find((v) => {
+        const vName = v.name.toLowerCase().replace(/\s+/g, '');
+        const vPhone = (v.phone || '').replace(/\s+/g, '');
+        const vEmail = (v.email || '').toLowerCase().replace(/\s+/g, '');
+        return vName === q || vPhone === q || vEmail === q || vName.includes(q) || vPhone.includes(q);
+      });
+    }
+
+    // 3. Fallback to first filtered volunteer if any
+    if (!target && filteredVolunteersForLogin.length > 0) {
+      target = filteredVolunteersForLogin[0];
+    }
+
+    if (target) {
+      performLogin(target);
+    } else {
+      setLoginError('لم يتم العثور على حساب مسجل بهذا الاسم أو رقم الهاتف. يمكنك إنشاء حسابك الجديد الآن في ثوانٍ.');
+    }
+  };
+
+  const handleRegisterSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const cleanName = name.trim();
+    if (!cleanName) return;
+
+    try {
+      setIsSubmitting(true);
+      const newVol: Volunteer = {
+        id: `vol-${Date.now()}`,
+        name: cleanName,
+        phone: phone.trim() || '0550 00 00 00',
+        email: email.trim() || `${cleanName.toLowerCase().replace(/\s+/g, '.')}@example.dz`,
+        age,
+        youthCenter,
+        wilaya,
+        monthlyPledgedHours,
+        balanceHours: 4, // Welcome 4 bonus hours
+        totalVolunteeredHours: 4,
+        skills: selectedSkills.length > 0 ? selectedSkills : ['خدمة المجتمع'],
+        joinedDate: new Date().toISOString().split('T')[0],
+        avatarBg: 'bg-emerald-600',
+        tier: 'متطوع برونزي',
+        status: 'نشط',
+      };
+
+      onRegister(newVol);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-200 my-8">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-200 my-8 animate-in fade-in zoom-in-95">
         
         {/* Top Header with Tab Switcher */}
         <div className="bg-slate-900 text-white p-4">
@@ -169,7 +216,7 @@ export const AuthModal: FC<AuthModalProps> = ({
               <Sparkles className="w-5 h-5 text-emerald-400" />
               <span className="text-sm font-bold">بوابة بنك الوقت - دار الشباب الروينة</span>
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-white transition">
+            <button onClick={onClose} className="text-slate-400 hover:text-white transition p-1 rounded-lg">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -177,7 +224,10 @@ export const AuthModal: FC<AuthModalProps> = ({
           <div className="grid grid-cols-2 gap-1.5 bg-slate-800 p-1 rounded-xl">
             <button
               type="button"
-              onClick={() => setActiveTab('login')}
+              onClick={() => {
+                setActiveTab('login');
+                setLoginError(null);
+              }}
               className={`py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
                 activeTab === 'login'
                   ? 'bg-emerald-600 text-white shadow-xs'
@@ -189,7 +239,10 @@ export const AuthModal: FC<AuthModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('register')}
+              onClick={() => {
+                setActiveTab('register');
+                setLoginError(null);
+              }}
               className={`py-2 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
                 activeTab === 'register'
                   ? 'bg-emerald-600 text-white shadow-xs'
@@ -204,28 +257,69 @@ export const AuthModal: FC<AuthModalProps> = ({
 
         {/* Tab 1: Login */}
         {activeTab === 'login' && (
-          <form onSubmit={handleLoginSubmit} className="p-6 space-y-4 text-right">
+          <form onSubmit={handleLoginSubmit} className="p-5 space-y-4 text-right">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                اختر حساب المتطوع أو ابحث باسمك:
+              <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                أدخل رقم هاتفك أو اسمك للدخول المباشر:
               </label>
 
               <div className="relative mb-2">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="ابحث بالاسم أو رقم الهاتف..."
                   value={loginSearch}
-                  onChange={(e) => setLoginSearch(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-9 pl-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  onChange={(e) => {
+                    setLoginSearch(e.target.value);
+                    if (loginError) setLoginError(null);
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pr-9 pl-3 py-2.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-hidden transition"
                 />
               </div>
 
-              <div className="max-h-48 overflow-y-auto space-y-1.5 p-1 border border-slate-200 rounded-xl bg-slate-50/50">
+              {loginError && (
+                <div className="mb-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{loginError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setName(loginSearch.trim());
+                      setPhone(loginSearch.trim().match(/^[0-9+]+$/) ? loginSearch.trim() : '');
+                      setActiveTab('register');
+                      setLoginError(null);
+                    }}
+                    className="self-start text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition"
+                  >
+                    + إنشاء حساب جديد بهذا الاسم / الرقم
+                  </button>
+                </div>
+              )}
+
+              <div className="max-h-52 overflow-y-auto space-y-1.5 p-1 border border-slate-200 rounded-xl bg-slate-50/50">
                 {filteredVolunteersForLogin.length === 0 ? (
-                  <div className="p-5 text-center text-xs text-slate-500">
-                    <p className="font-semibold text-slate-700">لا توجد أسماء متطوعين مسجلة حالياً</p>
-                    <p className="mt-1 text-[11px] text-slate-400">انتقل لخانة "تسجيل كمتطوع جديد" للانضمام وإنشاء حسابك</p>
+                  <div className="p-6 text-center text-xs text-slate-500">
+                    <p className="font-bold text-slate-800 text-sm">
+                      {volunteers.length === 0 ? 'لا توجد أسماء متطوعين مسجلة بعد' : 'لم نجد متطوعاً يطابق هذا البحث'}
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-500 leading-relaxed">
+                      {volunteers.length === 0
+                        ? 'قاعدة البيانات جاهزة لاستقبال المتطوعين الجدد. سجل الآن لتفعيل رصيدك الزمني.'
+                        : 'تأكد من كتابة الاسم أو رقم الهاتف بشكل صحيح، أو أنشئ حساباً جديداً.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setName(loginSearch.trim());
+                        setActiveTab('register');
+                      }}
+                      className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition inline-flex items-center gap-1.5 shadow-xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>تسجيل كمتطوع جديد الآن (+4 ساعات)</span>
+                    </button>
                   </div>
                 ) : (
                   filteredVolunteersForLogin.map((v) => {
@@ -234,15 +328,18 @@ export const AuthModal: FC<AuthModalProps> = ({
                     return (
                       <div
                         key={v.id}
-                        onClick={() => setSelectedVolunteerId(v.id)}
+                        onClick={() => {
+                          setSelectedVolunteerId(v.id);
+                          setLoginError(null);
+                        }}
                         className={`p-2.5 rounded-xl border text-right cursor-pointer transition flex items-center justify-between ${
                           isSelected
-                            ? 'bg-emerald-50 border-emerald-400 shadow-2xs'
+                            ? 'bg-emerald-50/80 border-emerald-400 shadow-2xs ring-1 ring-emerald-400/40'
                             : 'bg-white border-slate-100 hover:border-slate-300'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-7 h-7 rounded-full ${v.avatarBg} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+                          <div className={`w-8 h-8 rounded-full ${v.avatarBg || 'bg-emerald-600'} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
                             {v.name.charAt(0)}
                           </div>
                           <div>
@@ -258,10 +355,21 @@ export const AuthModal: FC<AuthModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="text-left">
-                          <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md">
                             {v.balanceHours} س
                           </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              performLogin(v);
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-xs"
+                          >
+                            <LogIn className="w-3 h-3" />
+                            <span>دخول</span>
+                          </button>
                         </div>
                       </div>
                     );
@@ -270,7 +378,7 @@ export const AuthModal: FC<AuthModalProps> = ({
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-slate-100 space-y-2.5">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
@@ -285,32 +393,47 @@ export const AuthModal: FC<AuthModalProps> = ({
                 </svg>
                 <span>{isGoogleLoading ? 'جاري تسجيل الدخول...' : 'الدخول السريع بحساب Google'}</span>
               </button>
+
+              <button
+                type="submit"
+                disabled={!selectedVolunteerId && !loginSearch.trim()}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>دخول إلى حسابي الآن</span>
+              </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={!selectedVolunteerId}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>دخول إلى حسابي الآن</span>
-            </button>
-
-            <div className="text-center pt-2">
+            <div className="pt-2 flex flex-col items-center gap-2 text-center">
               <button
                 type="button"
-                onClick={() => setActiveTab('register')}
-                className="text-xs text-emerald-700 hover:text-emerald-800 font-bold hover:underline"
+                onClick={() => {
+                  setActiveTab('register');
+                  setLoginError(null);
+                }}
+                className="text-xs text-emerald-700 hover:text-emerald-800 font-bold hover:underline flex items-center gap-1"
               >
-                ليس لديك حساب بعد؟ انقر هنا لإنشاء حساب جديد
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>ليس لديك حساب بعد؟ انقر هنا لإنشاء حساب جديد</span>
               </button>
+
+              {onOpenAdminLogin && (
+                <button
+                  type="button"
+                  onClick={onOpenAdminLogin}
+                  className="text-[11px] text-slate-500 hover:text-slate-800 transition flex items-center gap-1 mt-1 font-medium bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200"
+                >
+                  <Shield className="w-3.5 h-3.5 text-amber-600" />
+                  <span>دخول إدارة دار الشباب الروينة (طاقم الإشراف)</span>
+                </button>
+              )}
             </div>
           </form>
         )}
 
         {/* Tab 2: Register (for new people) */}
         {activeTab === 'register' && (
-          <form onSubmit={handleRegisterSubmit} className="p-6 space-y-3.5 text-right">
+          <form onSubmit={handleRegisterSubmit} className="p-5 space-y-3.5 text-right">
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 flex items-center gap-2">
               <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>هدية ترحيبية: تحصل على 4 ساعات رصيد مجانية في حسابك فور التسجيل للانطلاق في المبادرات!</span>
@@ -345,7 +468,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                 placeholder="مثال: حسام سعيدي"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-hidden transition"
               />
             </div>
 
@@ -357,7 +480,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                   placeholder="05 / 06 / 07 ..."
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-hidden transition"
                 />
               </div>
               <div>
@@ -368,7 +491,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                   max="35"
                   value={age}
                   onChange={(e) => setAge(parseInt(e.target.value) || 18)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-hidden transition"
                 />
               </div>
             </div>
@@ -378,7 +501,7 @@ export const AuthModal: FC<AuthModalProps> = ({
               <select
                 value={monthlyPledgedHours}
                 onChange={(e) => setMonthlyPledgedHours(parseInt(e.target.value))}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden transition"
               >
                 <option value={4}>4 ساعات شهرياً (ساعة كل أسبوع)</option>
                 <option value={8}>8 ساعات شهرياً (ساعتان كل أسبوع - مستحسن)</option>
@@ -409,10 +532,11 @@ export const AuthModal: FC<AuthModalProps> = ({
 
             <button
               type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs mt-2"
+              disabled={isSubmitting || !name.trim()}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-xs mt-2"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>إنشاء الحساب وبدء التطوع فوراً</span>
+              <span>{isSubmitting ? 'جاري حفظ وتثبيت الحساب...' : 'تسجيل المتطوع وتفعيل الرصيد (+4 ساعات مجانية)'}</span>
             </button>
 
             <div className="text-center pt-1">
@@ -431,3 +555,4 @@ export const AuthModal: FC<AuthModalProps> = ({
     </div>
   );
 };
+

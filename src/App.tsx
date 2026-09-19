@@ -1031,6 +1031,10 @@ export default function App() {
         onLogin={handleVolunteerLogin}
         onRegister={handleRegisterVolunteer}
         initialTab={authModalTab}
+        onOpenAdminLogin={() => {
+          setIsRegisterOpen(false);
+          setIsAdminAuthModalOpen(true);
+        }}
       />
 
       <LogHoursModal
