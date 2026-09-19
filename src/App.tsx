@@ -52,6 +52,8 @@ import {
   updateOpportunityDoc,
   saveTransactionDoc,
   saveCertificateDoc,
+  deleteVolunteerDoc,
+  deleteOpportunityDoc,
 } from './services/firestoreService';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -630,7 +632,7 @@ export default function App() {
   // Admin: Delete Opportunity permanently
   const handleDeleteOpportunity = (opId: string) => {
     setOpportunities((prev) => prev.filter((o) => o.id !== opId));
-    updateOpportunityDoc(opId, { status: 'معطلة' }).catch(console.error);
+    deleteOpportunityDoc(opId).catch(console.error);
     showToast('تم حذف المبادرة نهائياً من نظام بنك الوقت.');
   };
 
@@ -701,15 +703,24 @@ export default function App() {
     );
   };
 
-  // Admin: Delete Volunteer account
+  // Admin: Delete Volunteer account permanently
   const handleDeleteVolunteer = (volunteerId: string) => {
     const targetVol = volunteers.find((v) => v.id === volunteerId);
     setVolunteers((prev) => prev.filter((v) => v.id !== volunteerId));
     if (currentVolunteerId === volunteerId) {
       setCurrentVolunteerId('');
     }
-    updateVolunteerDoc(volunteerId, { status: 'معطل' }).catch(console.error);
-    showToast(`تم حذف حساب المتطوع "${targetVol?.name || ''}" نهائياً من قاعدة البيانات.`);
+    deleteVolunteerDoc(volunteerId).catch(console.error);
+    showToast(`تم حذف حساب المتطوع "${targetVol?.name || ''}" نهائياً.`);
+  };
+
+  // Admin: Edit / Update Volunteer info & hours
+  const handleUpdateVolunteer = (volunteerId: string, updates: Partial<Volunteer>) => {
+    setVolunteers((prev) =>
+      prev.map((v) => (v.id === volunteerId ? { ...v, ...updates } : v))
+    );
+    updateVolunteerDoc(volunteerId, updates).catch(console.error);
+    showToast('تم تحديث وتعديل بيانات المتطوع وسجل ساعاته بنجاح!');
   };
 
   // Admin: Suspend or Reactivate Volunteer account
@@ -795,6 +806,7 @@ export default function App() {
         {activeTab === 'opportunities' && (
           <OpportunitiesView
             opportunities={opportunities}
+            volunteers={volunteers}
             currentVolunteer={currentVolunteer}
             onToggleJoin={handleToggleJoin}
             onLogHoursForActivity={(act) => {
@@ -877,6 +889,7 @@ export default function App() {
               onDeleteVolunteer={handleDeleteVolunteer}
               onToggleVolunteerStatus={handleToggleVolunteerStatus}
               onCreateVolunteer={handleCreateVolunteer}
+              onUpdateVolunteer={handleUpdateVolunteer}
             />
           ) : (
             <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center max-w-lg mx-auto my-8 shadow-sm space-y-4">

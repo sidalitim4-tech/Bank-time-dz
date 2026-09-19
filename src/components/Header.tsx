@@ -168,20 +168,11 @@ export const Header: FC<HeaderProps> = ({
                 ) : (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => onOpenRegisterModal('register')}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-xs ring-2 ring-emerald-500/20 hover:scale-[1.02] active:scale-[0.98]"
-                      title="التسجيل كمتطوع جديد في بنك الوقت بدار الشباب"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      <span>تسجيل كمتطوع</span>
-                    </button>
-
-                    <button
                       onClick={() => onOpenRegisterModal('login')}
-                      className="bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs px-3 py-2.5 rounded-xl border border-slate-300 transition flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
-                      title="تسجيل الدخول إلى حسابك المسجل مسبقاً"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-xs ring-2 ring-emerald-500/20 hover:scale-[1.02] active:scale-[0.98]"
+                      title="تسجيل الدخول إلى منصة بنك الوقت التطوعي"
                     >
-                      <LogIn className="w-3.5 h-3.5 text-slate-500" />
+                      <LogIn className="w-4 h-4" />
                       <span>تسجيل الدخول</span>
                     </button>
                   </div>

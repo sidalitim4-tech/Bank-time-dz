@@ -27,10 +27,13 @@ import {
   AlertTriangle,
   PlusCircle,
   MinusCircle,
+  Phone,
 } from 'lucide-react';
 import { AdminAnalyticsCharts } from './AdminAnalyticsCharts';
 import { AdminAdjustHoursModal } from './AdminAdjustHoursModal';
 import { AdminCreateVolunteerModal } from './AdminCreateVolunteerModal';
+import { AdminEditVolunteerModal } from './AdminEditVolunteerModal';
+import { OpportunityParticipantsModal } from './OpportunityParticipantsModal';
 
 interface DarChababAdminViewProps {
   volunteers: Volunteer[];
@@ -52,6 +55,7 @@ interface DarChababAdminViewProps {
   onDeleteVolunteer?: (volunteerId: string) => void;
   onToggleVolunteerStatus?: (volunteerId: string) => void;
   onCreateVolunteer?: (volunteer: Volunteer) => void;
+  onUpdateVolunteer?: (volunteerId: string, updates: Partial<Volunteer>) => void;
 }
 
 export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
@@ -69,14 +73,19 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
   onDeleteVolunteer,
   onToggleVolunteerStatus,
   onCreateVolunteer,
+  onUpdateVolunteer,
 }) => {
-  const [activeAdminTab, setActiveAdminTab] = useState<'analytics' | 'pending' | 'activities' | 'roster'>('analytics');
+  const [activeAdminTab, setActiveAdminTab] = useState<'roster' | 'analytics' | 'pending' | 'activities'>('roster');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modals state
   const [adjustModalVolunteer, setAdjustModalVolunteer] = useState<Volunteer | null>(null);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isCreateVolunteerModalOpen, setIsCreateVolunteerModalOpen] = useState(false);
+  const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null);
+  const [isEditVolunteerModalOpen, setIsEditVolunteerModalOpen] = useState(false);
+  const [selectedOpForParticipants, setSelectedOpForParticipants] = useState<ActivityOpportunity | null>(null);
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
 
   // Pending transactions awaiting youth center approval
   const pendingTransactions = transactions.filter((tx) => tx.status === 'قيد المراجعة');
@@ -201,44 +210,32 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
       {/* Navigation Subtabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button
-          onClick={() => setActiveAdminTab('analytics')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
-            activeAdminTab === 'analytics'
-              ? 'bg-emerald-600 text-white shadow-2xs font-extrabold'
-              : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
-          }`}
-        >
-          <BarChart3 className="w-3.5 h-3.5" />
-          <span>الإحصائيات والرسوم البيانية</span>
-        </button>
-
-        <button
           onClick={() => setActiveAdminTab('roster')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
+          className={`px-4 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
             activeAdminTab === 'roster'
-              ? 'bg-slate-900 text-white shadow-2xs font-extrabold'
+              ? 'bg-slate-900 text-white shadow-2xs font-extrabold ring-2 ring-slate-800/30'
               : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
           }`}
         >
-          <Users className="w-3.5 h-3.5" />
-          <span>سجل المتطوعين والتحكم في الساعات ({volunteers.length})</span>
+          <Users className="w-4 h-4 text-amber-400" />
+          <span>خانة المتطوعين والمسجلين ({volunteers.length})</span>
         </button>
 
         <button
           onClick={() => setActiveAdminTab('activities')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
+          className={`px-4 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
             activeAdminTab === 'activities'
-              ? 'bg-slate-900 text-white shadow-2xs'
+              ? 'bg-slate-900 text-white shadow-2xs font-extrabold ring-2 ring-slate-800/30'
               : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
           }`}
         >
-          <TreePine className="w-3.5 h-3.5" />
+          <TreePine className="w-3.5 h-3.5 text-emerald-400" />
           <span>إدارة وتعطيل المبادرات ({opportunities.length})</span>
         </button>
 
         <button
           onClick={() => setActiveAdminTab('pending')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
+          className={`px-4 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
             activeAdminTab === 'pending'
               ? 'bg-amber-500 text-slate-950 shadow-2xs font-extrabold'
               : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
@@ -246,6 +243,18 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
         >
           <Clock className="w-3.5 h-3.5" />
           <span>طلبات اعتماد الساعات ({pendingTransactions.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('analytics')}
+          className={`px-4 py-2.5 text-xs font-bold rounded-xl transition flex items-center gap-2 ${
+            activeAdminTab === 'analytics'
+              ? 'bg-emerald-600 text-white shadow-2xs font-extrabold'
+              : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>الإحصائيات والرسوم البيانية</span>
         </button>
       </div>
 
@@ -380,6 +389,9 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
                   .filter(
                     (v) =>
                       v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (v.phone && v.phone.includes(searchTerm)) ||
+                      (v.email && v.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                      (v.wilaya && v.wilaya.toLowerCase().includes(searchTerm.toLowerCase())) ||
                       v.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()))
                   )
                   .map((v) => {
@@ -407,8 +419,12 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[10px] text-slate-400 mt-0.5">
-                                {v.phone} • {v.monthlyPledgedHours} س/شهر
+                              <div className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                                <span className="font-mono text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/80 flex items-center gap-1">
+                                  <Phone className="w-2.5 h-2.5 text-emerald-600" />
+                                  <span dir="ltr">{v.phone}</span>
+                                </span>
+                                <span>• {v.monthlyPledgedHours} س/شهر</span>
                               </div>
                             </div>
                           </div>
@@ -479,14 +495,28 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
                           </div>
                         </td>
 
-                        {/* Requirement 4: Delete or Suspend Members */}
+                        {/* Admin Volunteer Actions: Edit, Suspend, Delete */}
                         <td className="py-3.5 px-4 text-center">
                           <div className="flex items-center justify-center gap-1.5">
+                            {/* Edit Volunteer Details */}
+                            {onUpdateVolunteer && (
+                              <button
+                                onClick={() => {
+                                  setEditingVolunteer(v);
+                                  setIsEditVolunteerModalOpen(true);
+                                }}
+                                className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition border border-blue-200"
+                                title="تعديل بيانات المتطوع وسجل ساعاته"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+
                             {/* Suspend / Activate Toggle */}
                             {onToggleVolunteerStatus && (
                               <button
                                 onClick={() => onToggleVolunteerStatus(v.id)}
-                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 border ${
+                                className={`px-2 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 border ${
                                   isSuspended
                                     ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                                     : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
@@ -622,6 +652,24 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
                       </span>
                     </div>
 
+                    {/* View joined participants with names & phone numbers */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedOpForParticipants(op);
+                        setIsParticipantsModalOpen(true);
+                      }}
+                      className="w-full text-xs font-bold py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 border border-emerald-200 transition flex items-center justify-center gap-1.5 shadow-2xs"
+                      title="عرض قائمة المتطوعين المنضمين مع أرقام هواتفهم للتواصل الميداني"
+                    >
+                      <Users className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>
+                        {op.registeredVolunteerIds.length > 0
+                          ? `عرض المنضمين (${op.registeredVolunteerIds.length}) • إظهار الأسماء والهواتف`
+                          : 'قائمة المنضمين (0)'}
+                      </span>
+                    </button>
+
                     {/* Action buttons: Edit, Finish, Suspend, and Delete */}
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       {onEditOpportunity && (
@@ -713,6 +761,32 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
           onCreateVolunteer={onCreateVolunteer}
         />
       )}
+
+      {/* Edit Volunteer Modal for Admin */}
+      <AdminEditVolunteerModal
+        isOpen={isEditVolunteerModalOpen}
+        volunteer={editingVolunteer}
+        onClose={() => {
+          setIsEditVolunteerModalOpen(false);
+          setEditingVolunteer(null);
+        }}
+        onSave={(volId, updates) => {
+          if (onUpdateVolunteer) {
+            onUpdateVolunteer(volId, updates);
+          }
+        }}
+      />
+
+      {/* Opportunity Participants Modal */}
+      <OpportunityParticipantsModal
+        isOpen={isParticipantsModalOpen}
+        onClose={() => {
+          setIsParticipantsModalOpen(false);
+          setSelectedOpForParticipants(null);
+        }}
+        activity={selectedOpForParticipants}
+        volunteers={volunteers}
+      />
 
     </div>
   );

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { ActivityOpportunity, Volunteer } from '../types';
 import {
   Calendar,
@@ -13,11 +13,14 @@ import {
   Send,
   UserPlus,
   Shield,
+  Phone,
 } from 'lucide-react';
+import { OpportunityParticipantsModal } from './OpportunityParticipantsModal';
 
 interface OpportunityCardProps {
   activity: ActivityOpportunity;
   currentVolunteer: Volunteer | null;
+  volunteers?: Volunteer[];
   onToggleJoin: (activityId: string) => void;
   onEditOpportunity: (activity: ActivityOpportunity) => void;
   onFinishAndDistributeHours: (activity: ActivityOpportunity) => void;
@@ -27,11 +30,14 @@ interface OpportunityCardProps {
 export const OpportunityCard: FC<OpportunityCardProps> = ({
   activity,
   currentVolunteer,
+  volunteers = [],
   onToggleJoin,
   onEditOpportunity,
   onFinishAndDistributeHours,
   isAdminMode = false,
 }) => {
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+
   const isJoined = currentVolunteer
     ? activity.registeredVolunteerIds.includes(currentVolunteer.id)
     : false;
@@ -144,14 +150,14 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
           </div>
         </div>
 
-        {/* Volunteers Progress - Requirement 1: No one can see registered persons; only the count is shown */}
+        {/* Volunteers Progress & Joined Participants */}
         <div className="mt-4 pt-3 border-t border-slate-100">
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-slate-500 flex items-center gap-1">
+            <span className="text-slate-600 flex items-center gap-1 font-semibold">
               <Users className="w-3.5 h-3.5 text-slate-400" />
               المتطوعون المسجلون:
             </span>
-            <span className="font-bold text-slate-800">
+            <span className="font-extrabold text-slate-900">
               {activity.registeredVolunteerIds.length} من {activity.requiredVolunteers}
             </span>
           </div>
@@ -167,12 +173,58 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
               style={{ width: `${percentFilled}%` }}
             />
           </div>
-          <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-            <span>نسبة الاستجابة: {percentFilled}%</span>
-            <span className="text-slate-400 font-normal">
-              (أسماء المسجلين مشفرة وخاصة)
+
+          {/* Quick Participants Preview & Modal Trigger */}
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setShowParticipantsModal(true)}
+              className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200/80 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 shadow-2xs"
+              title="عرض قائمة المنضمين للمبادرة مع أرقام هواتفهم"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-600" />
+              <span>
+                {activity.registeredVolunteerIds.length > 0
+                  ? `المنضمون (${activity.registeredVolunteerIds.length}) • إظهار الأسماء والهواتف`
+                  : 'قائمة المنضمين (0)'}
+              </span>
+            </button>
+
+            <span className="text-[10px] text-slate-400">
+              نسبة التسجيل: {percentFilled}%
             </span>
           </div>
+
+          {/* Mini participant chips */}
+          {activity.registeredVolunteerIds.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {activity.registeredVolunteerIds.slice(0, 3).map((id) => {
+                const vol = volunteers.find((v) => v.id === id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setShowParticipantsModal(true)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-medium border border-slate-200 transition"
+                  >
+                    <span className="font-semibold">{vol ? vol.name : 'متطوع'}</span>
+                    {vol?.phone && (
+                      <span className="text-emerald-700 font-mono text-[9px]">({vol.phone})</span>
+                    )}
+                  </button>
+                );
+              })}
+              {activity.registeredVolunteerIds.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setShowParticipantsModal(true)}
+                  className="text-[10px] font-bold text-emerald-700 hover:underline"
+                >
+                  +{activity.registeredVolunteerIds.length - 3} آخرين...
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Informational Creator / Completion Note */}
@@ -270,6 +322,14 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Participants Modal displaying registered volunteer names & phone numbers */}
+      <OpportunityParticipantsModal
+        isOpen={showParticipantsModal}
+        onClose={() => setShowParticipantsModal(false)}
+        activity={activity}
+        volunteers={volunteers}
+      />
     </div>
   );
 };

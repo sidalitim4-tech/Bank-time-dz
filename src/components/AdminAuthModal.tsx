@@ -16,14 +16,14 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // Default demo passcode
-    if (pin.trim() === '1234' || pin.trim() === 'admin2026') {
+    // Designated admin passcode
+    if (pin.trim() === '200644') {
       setError(null);
       setPin('');
       onSuccess();
       onClose();
     } else {
-      setError('رمز المرور غير صحيح. يرجى استخدام الرمز التجريبي: 1234');
+      setError('رمز المرور غير صحيح. يرجى إدخال رمز الدخول المعتمد: 200644');
     }
   };
 
@@ -90,7 +90,7 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
             </div>
             
             <p className="text-[11px] text-slate-400 mt-1.5 flex items-center justify-between">
-              <span>رمز المرور المخصص للتجربة: <strong className="text-slate-700 font-mono">1234</strong></span>
+              <span>رمز المرور المعتمد: <strong className="text-slate-700 font-mono">200644</strong></span>
               <Lock className="w-3 h-3 text-slate-400" />
             </p>
           </div>

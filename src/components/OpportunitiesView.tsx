@@ -6,6 +6,7 @@ import { Search, Plus, Filter, TreePine, Sparkles, Building2, UserPlus, LogIn } 
 interface OpportunitiesViewProps {
   opportunities: ActivityOpportunity[];
   currentVolunteer: Volunteer | null;
+  volunteers?: Volunteer[];
   onToggleJoin: (activityId: string) => void;
   onLogHoursForActivity: (activity: ActivityOpportunity) => void;
   onOpenCreateOpportunityModal: () => void;
@@ -27,6 +28,7 @@ const CATEGORIES: ('الكل' | VolunteerCategory)[] = [
 export const OpportunitiesView: FC<OpportunitiesViewProps> = ({
   opportunities,
   currentVolunteer,
+  volunteers = [],
   onToggleJoin,
   onLogHoursForActivity,
   onOpenCreateOpportunityModal,
@@ -171,6 +173,7 @@ export const OpportunitiesView: FC<OpportunitiesViewProps> = ({
               key={activity.id}
               activity={activity}
               currentVolunteer={currentVolunteer}
+              volunteers={volunteers}
               onToggleJoin={onToggleJoin}
               onEditOpportunity={onEditOpportunity}
               onFinishAndDistributeHours={onFinishAndDistributeHours}

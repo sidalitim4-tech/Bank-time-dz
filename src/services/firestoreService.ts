@@ -275,3 +275,28 @@ export async function saveCertificateDoc(certificate: Certificate): Promise<void
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
+
+/**
+ * Delete a volunteer permanently from Firestore
+ */
+export async function deleteVolunteerDoc(volunteerId: string): Promise<void> {
+  const path = `${VOLUNTEERS_COLLECTION}/${volunteerId}`;
+  try {
+    await deleteDoc(doc(db, VOLUNTEERS_COLLECTION, volunteerId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+/**
+ * Delete an opportunity permanently from Firestore
+ */
+export async function deleteOpportunityDoc(opportunityId: string): Promise<void> {
+  const path = `${OPPORTUNITIES_COLLECTION}/${opportunityId}`;
+  try {
+    await deleteDoc(doc(db, OPPORTUNITIES_COLLECTION, opportunityId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
