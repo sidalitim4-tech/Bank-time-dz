@@ -222,44 +222,51 @@ export const AuthModal: FC<AuthModalProps> = ({
               </div>
 
               <div className="max-h-48 overflow-y-auto space-y-1.5 p-1 border border-slate-200 rounded-xl bg-slate-50/50">
-                {filteredVolunteersForLogin.map((v) => {
-                  const isSelected = selectedVolunteerId === v.id;
-                  const isSuspended = v.status === 'معطل';
-                  return (
-                    <div
-                      key={v.id}
-                      onClick={() => setSelectedVolunteerId(v.id)}
-                      className={`p-2.5 rounded-xl border text-right cursor-pointer transition flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-emerald-50 border-emerald-400 shadow-2xs'
-                          : 'bg-white border-slate-100 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-7 h-7 rounded-full ${v.avatarBg} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
-                          {v.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                            <span>{v.name}</span>
-                            {isSuspended && (
-                              <span className="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded-full font-bold">
-                                معطل
-                              </span>
-                            )}
+                {filteredVolunteersForLogin.length === 0 ? (
+                  <div className="p-5 text-center text-xs text-slate-500">
+                    <p className="font-semibold text-slate-700">لا توجد أسماء متطوعين مسجلة حالياً</p>
+                    <p className="mt-1 text-[11px] text-slate-400">انتقل لخانة "تسجيل كمتطوع جديد" للانضمام وإنشاء حسابك</p>
+                  </div>
+                ) : (
+                  filteredVolunteersForLogin.map((v) => {
+                    const isSelected = selectedVolunteerId === v.id;
+                    const isSuspended = v.status === 'معطل';
+                    return (
+                      <div
+                        key={v.id}
+                        onClick={() => setSelectedVolunteerId(v.id)}
+                        className={`p-2.5 rounded-xl border text-right cursor-pointer transition flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-emerald-50 border-emerald-400 shadow-2xs'
+                            : 'bg-white border-slate-100 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-7 h-7 rounded-full ${v.avatarBg} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
+                            {v.name.charAt(0)}
                           </div>
-                          <div className="text-[10px] text-slate-500">{v.phone} • {v.youthCenter}</div>
+                          <div>
+                            <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                              <span>{v.name}</span>
+                              {isSuspended && (
+                                <span className="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded-full font-bold">
+                                  معطل
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-500">{v.phone} • {v.youthCenter}</div>
+                          </div>
+                        </div>
+
+                        <div className="text-left">
+                          <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                            {v.balanceHours} س
+                          </span>
                         </div>
                       </div>
-
-                      <div className="text-left">
-                        <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
-                          {v.balanceHours} س
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
 

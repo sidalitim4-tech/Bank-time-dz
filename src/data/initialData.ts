@@ -1,71 +1,6 @@
 import { Volunteer, ActivityOpportunity, TimeTransaction, Perk, Certificate } from '../types';
 
-export const INITIAL_VOLUNTEERS: Volunteer[] = [
-  {
-    id: 'vol-1',
-    name: 'ياسين بن عمار',
-    phone: '0551 23 45 67',
-    email: 'yassine.b@example.dz',
-    age: 21,
-    youthCenter: 'دار الشباب الروينة',
-    wilaya: 'عين الدفلى',
-    monthlyPledgedHours: 12,
-    balanceHours: 18,
-    totalVolunteeredHours: 34,
-    skills: ['تشجير وبستنة', 'تنظيم معارض', 'إسعافات أولية', 'إعلام آلي'],
-    joinedDate: '2025-01-10',
-    avatarBg: 'bg-emerald-600',
-    tier: 'متطوع ذهبي',
-  },
-  {
-    id: 'vol-2',
-    name: 'أمينة قدور',
-    phone: '0662 98 76 54',
-    email: 'amina.kaddour@example.dz',
-    age: 19,
-    youthCenter: 'دار الشباب الروينة',
-    wilaya: 'عين الدفلى',
-    monthlyPledgedHours: 8,
-    balanceHours: 14,
-    totalVolunteeredHours: 22,
-    skills: ['تنشيط ورشات أطفال', 'تصميم غرافيكي', 'إعلام وتواصل'],
-    joinedDate: '2025-02-01',
-    avatarBg: 'bg-teal-600',
-    tier: 'متطوع فضي',
-  },
-  {
-    id: 'vol-3',
-    name: 'طارق مرواني',
-    phone: '0770 11 22 33',
-    email: 'tarek.marouani@example.dz',
-    age: 24,
-    youthCenter: 'دار الشباب الروينة',
-    wilaya: 'عين الدفلى',
-    monthlyPledgedHours: 15,
-    balanceHours: 25,
-    totalVolunteeredHours: 50,
-    skills: ['صيانة حواسيب', 'إشراف ميداني', 'حملات بيئية'],
-    joinedDate: '2024-11-15',
-    avatarBg: 'bg-blue-600',
-    tier: 'سفير التطوع',
-  },
-  {
-    id: 'vol-4',
-    name: 'فاطمة الزهراء حليمي',
-    phone: '0560 44 55 66',
-    email: 'fatima.halimi@example.dz',
-    age: 20,
-    youthCenter: 'دار الشباب العطاف',
-    wilaya: 'عين الدفلى',
-    monthlyPledgedHours: 6,
-    balanceHours: 6,
-    totalVolunteeredHours: 10,
-    skills: ['دعم مدرسي', 'أعمال يدوية'],
-    joinedDate: '2025-03-01',
-    avatarBg: 'bg-rose-600',
-    tier: 'متطوع برونزي',
-  }
-];
+export const INITIAL_VOLUNTEERS: Volunteer[] = [];
 
 export const INITIAL_OPPORTUNITIES: ActivityOpportunity[] = [
   {
@@ -81,11 +16,11 @@ export const INITIAL_OPPORTUNITIES: ActivityOpportunity[] = [
     time: '08:30 صباحاً - 12:30 زوالاً',
     durationHours: 4,
     requiredVolunteers: 25,
-    registeredVolunteerIds: ['vol-1', 'vol-2', 'vol-3'],
+    registeredVolunteerIds: [],
     status: 'مفتوحة',
     isPilotAinDefla: true,
-    creatorVolunteerId: 'vol-1',
-    creatorVolunteerName: 'ياسين بن عمار',
+    creatorVolunteerId: 'admin-chabab',
+    creatorVolunteerName: 'دار الشباب الروينة',
   },
   {
     id: 'act-2',
@@ -100,11 +35,11 @@ export const INITIAL_OPPORTUNITIES: ActivityOpportunity[] = [
     time: '14:30 - 17:30 مساءً',
     durationHours: 3,
     requiredVolunteers: 15,
-    registeredVolunteerIds: ['vol-1', 'vol-4'],
+    registeredVolunteerIds: [],
     status: 'مفتوحة',
     isPilotAinDefla: true,
-    creatorVolunteerId: 'vol-2',
-    creatorVolunteerName: 'أمينة قدور',
+    creatorVolunteerId: 'admin-chabab',
+    creatorVolunteerName: 'النادي الأخضر',
   },
   {
     id: 'act-3',
@@ -119,11 +54,11 @@ export const INITIAL_OPPORTUNITIES: ActivityOpportunity[] = [
     time: '09:00 صباحاً - 15:00 بعد الظهر',
     durationHours: 6,
     requiredVolunteers: 20,
-    registeredVolunteerIds: ['vol-2', 'vol-3'],
+    registeredVolunteerIds: [],
     status: 'مفتوحة',
     isPilotAinDefla: true,
-    creatorVolunteerId: 'vol-3',
-    creatorVolunteerName: 'طارق مرواني',
+    creatorVolunteerId: 'admin-chabab',
+    creatorVolunteerName: 'رابطة الهواء الطلق والترفيه',
   },
   {
     id: 'act-4',
@@ -138,11 +73,11 @@ export const INITIAL_OPPORTUNITIES: ActivityOpportunity[] = [
     time: '16:00 - 18:00 مساءً',
     durationHours: 2,
     requiredVolunteers: 8,
-    registeredVolunteerIds: ['vol-4'],
+    registeredVolunteerIds: [],
     status: 'مفتوحة',
     isPilotAinDefla: true,
-    creatorVolunteerId: 'vol-4',
-    creatorVolunteerName: 'فاطمة الزهراء حليمي',
+    creatorVolunteerId: 'admin-chabab',
+    creatorVolunteerName: 'جمعية بصمة أمل',
   },
   {
     id: 'act-5',
@@ -157,88 +92,15 @@ export const INITIAL_OPPORTUNITIES: ActivityOpportunity[] = [
     time: '13:00 - 16:00 بعد الزوال',
     durationHours: 3,
     requiredVolunteers: 6,
-    registeredVolunteerIds: ['vol-1', 'vol-3'],
+    registeredVolunteerIds: [],
     status: 'مفتوحة',
     isPilotAinDefla: true,
-    creatorVolunteerId: 'vol-1',
-    creatorVolunteerName: 'ياسين بن عمار',
+    creatorVolunteerId: 'admin-chabab',
+    creatorVolunteerName: 'نادي الروبوتيك والمعلوماتية',
   }
 ];
 
-export const INITIAL_TRANSACTIONS: TimeTransaction[] = [
-  {
-    id: 'tx-1',
-    volunteerId: 'vol-1',
-    volunteerName: 'ياسين بن عمار',
-    activityTitle: 'حملة تشجير محيط وادي الشرفة - المرحلة الأولى',
-    hours: 4,
-    type: 'EARNED',
-    date: '2026-09-05',
-    status: 'معتمد',
-    verifiedBy: 'مدير دار الشباب الروينة',
-    notes: 'مشاركة ممتازة والتزام بالمواعيد'
-  },
-  {
-    id: 'tx-2',
-    volunteerId: 'vol-1',
-    volunteerName: 'ياسين بن عمار',
-    activityTitle: 'تنظيم اليوم التحسيسي لمكافحة حرائق الغابات',
-    hours: 5,
-    type: 'EARNED',
-    date: '2026-09-11',
-    status: 'معتمد',
-    verifiedBy: 'مسؤول النادي البيئي الروينة',
-    notes: 'إشراف على التوجيه الميداني'
-  },
-  {
-    id: 'tx-3',
-    volunteerId: 'vol-1',
-    volunteerName: 'ياسين بن عمار',
-    activityTitle: 'ورشة التكوين في القيادة وصناعة المبادرات الشبابية',
-    hours: 6,
-    type: 'REDEEMED',
-    date: '2026-09-14',
-    status: 'معتمد',
-    perkName: 'دورة تكوينية معتمدة في قيادة المبادرات',
-    verifiedBy: 'إدارة بنك الوقت',
-    notes: 'استبدال الرصيد بمقعد تكويني مجاني'
-  },
-  {
-    id: 'tx-4',
-    volunteerId: 'vol-1',
-    volunteerName: 'ياسين بن عمار',
-    activityTitle: 'تنظيف الساحة العامة وتثبيت لوحات التوعية',
-    hours: 3,
-    type: 'EARNED',
-    date: '2026-09-15',
-    status: 'معتمد',
-    verifiedBy: 'مدير دار الشباب الروينة',
-    notes: 'مشاركة فعالة'
-  },
-  {
-    id: 'tx-5',
-    volunteerId: 'vol-2',
-    volunteerName: 'أمينة قدور',
-    activityTitle: 'تصميم مطويات وإعلانات الملتقى الشبابي',
-    hours: 4,
-    type: 'EARNED',
-    date: '2026-09-12',
-    status: 'معتمد',
-    verifiedBy: 'مكلف الإعلام دار الشباب',
-    notes: 'تصاميم احترافية للمنصة'
-  },
-  {
-    id: 'tx-6',
-    volunteerId: 'vol-3',
-    volunteerName: 'طارق مرواني',
-    activityTitle: 'حملة نظافة محيط المنشآت الرياضية',
-    hours: 4,
-    type: 'EARNED',
-    date: '2026-09-13',
-    status: 'معتمد',
-    verifiedBy: 'مدير دار الشباب الروينة'
-  }
-];
+export const INITIAL_TRANSACTIONS: TimeTransaction[] = [];
 
 export const INITIAL_PERKS: Perk[] = [
   {
@@ -315,16 +177,4 @@ export const INITIAL_PERKS: Perk[] = [
   }
 ];
 
-export const INITIAL_CERTIFICATES: Certificate[] = [
-  {
-    id: 'cert-1',
-    serialNumber: 'DZ-AD-ROUINA-2026-0042',
-    volunteerName: 'ياسين بن عمار',
-    volunteerId: 'vol-1',
-    totalHours: 30,
-    activityCampaign: 'المساهمة الفعالة في حملات التشجير وحماية البيئة بدار الشباب الروينة',
-    issueDate: '2026-09-10',
-    issuedBy: 'دار الشباب الروينة - ديوان مؤسسات الشباب - مديرية الشباب والرياضة لولاية عين الدفلى',
-    qrHash: 'VERIF-TIMEBANK-ROUINA-VOL1-2026'
-  }
-];
+export const INITIAL_CERTIFICATES: Certificate[] = [];

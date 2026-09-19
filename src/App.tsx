@@ -54,6 +54,7 @@ import {
   saveCertificateDoc,
   deleteVolunteerDoc,
   deleteOpportunityDoc,
+  clearAllVolunteersFromDatabase,
 } from './services/firestoreService';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -61,30 +62,66 @@ import { onAuthStateChanged } from 'firebase/auth';
 export default function App() {
   // Persistent state
   const [volunteers, setVolunteers] = useState<Volunteer[]>(() => {
+    const clearFlag = localStorage.getItem('timebank_cleared_all_names_v2');
+    if (!clearFlag) {
+      localStorage.setItem('timebank_cleared_all_names_v2', 'true');
+      localStorage.removeItem('timebank_volunteers');
+      localStorage.removeItem('timebank_transactions');
+      localStorage.removeItem('timebank_certificates');
+      localStorage.setItem('timebank_current_vol_id', '');
+      return [];
+    }
     const saved = localStorage.getItem('timebank_volunteers');
-    return saved ? JSON.parse(saved) : INITIAL_VOLUNTEERS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.filter((v: Volunteer) => !['vol-1', 'vol-2', 'vol-3', 'vol-4'].includes(v.id));
+      } catch {
+        return [];
+      }
+    }
+    return INITIAL_VOLUNTEERS;
   });
 
   const [currentVolunteerId, setCurrentVolunteerId] = useState<string>(() => {
-    const v2Flag = localStorage.getItem('timebank_guest_flow_v2');
-    if (!v2Flag) {
-      localStorage.setItem('timebank_guest_flow_v2', 'true');
+    const volId = localStorage.getItem('timebank_current_vol_id') || '';
+    if (['vol-1', 'vol-2', 'vol-3', 'vol-4'].includes(volId)) {
       localStorage.setItem('timebank_current_vol_id', '');
       return '';
     }
-    return localStorage.getItem('timebank_current_vol_id') || '';
+    return volId;
   });
 
   const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('register');
 
   const [opportunities, setOpportunities] = useState<ActivityOpportunity[]>(() => {
     const saved = localStorage.getItem('timebank_opportunities');
-    return saved ? JSON.parse(saved) : INITIAL_OPPORTUNITIES;
+    if (saved) {
+      try {
+        const parsed: ActivityOpportunity[] = JSON.parse(saved);
+        return parsed.map(op => ({
+          ...op,
+          registeredVolunteerIds: (op.registeredVolunteerIds || []).filter(id => !['vol-1', 'vol-2', 'vol-3', 'vol-4'].includes(id)),
+          creatorVolunteerName: ['ياسين بن عمار', 'أمينة قدور', 'طارق مرواني', 'فاطمة الزهراء حليمي'].includes(op.creatorVolunteerName || '') ? 'دار الشباب الروينة' : op.creatorVolunteerName
+        }));
+      } catch {
+        return INITIAL_OPPORTUNITIES;
+      }
+    }
+    return INITIAL_OPPORTUNITIES;
   });
 
   const [transactions, setTransactions] = useState<TimeTransaction[]>(() => {
     const saved = localStorage.getItem('timebank_transactions');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.filter((tx: TimeTransaction) => !['tx-1', 'tx-2', 'tx-3', 'tx-4', 'tx-5', 'tx-6'].includes(tx.id));
+      } catch {
+        return [];
+      }
+    }
+    return INITIAL_TRANSACTIONS;
   });
 
   const [perks, setPerks] = useState<Perk[]>(() => {
@@ -94,7 +131,15 @@ export default function App() {
 
   const [certificates, setCertificates] = useState<Certificate[]>(() => {
     const saved = localStorage.getItem('timebank_certificates');
-    return saved ? JSON.parse(saved) : INITIAL_CERTIFICATES;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.filter((c: Certificate) => c.id !== 'cert-1');
+      } catch {
+        return [];
+      }
+    }
+    return INITIAL_CERTIFICATES;
   });
 
   // Admin privacy & security state
@@ -150,15 +195,22 @@ export default function App() {
     seedInitialDataIfEmpty().catch(console.error);
 
     const unsubVolunteers = subscribeVolunteers((data) => {
-      if (data && data.length > 0) setVolunteers(data);
+      setVolunteers(data || []);
     });
 
     const unsubOps = subscribeOpportunities((data) => {
-      if (data && data.length > 0) setOpportunities(data);
+      if (data && data.length > 0) {
+        const cleaned = data.map(op => ({
+          ...op,
+          registeredVolunteerIds: (op.registeredVolunteerIds || []).filter(id => !['vol-1', 'vol-2', 'vol-3', 'vol-4'].includes(id)),
+          creatorVolunteerName: ['ياسين بن عمار', 'أمينة قدور', 'طارق مرواني', 'فاطمة الزهراء حليمي'].includes(op.creatorVolunteerName || '') ? 'دار الشباب الروينة' : op.creatorVolunteerName
+        }));
+        setOpportunities(cleaned);
+      }
     });
 
     const unsubTxs = subscribeTransactions((data) => {
-      if (data && data.length > 0) setTransactions(data);
+      setTransactions((data || []).filter(tx => !['tx-1', 'tx-2', 'tx-3', 'tx-4', 'tx-5', 'tx-6'].includes(tx.id)));
     });
 
     const unsubPerks = subscribePerks((data) => {
@@ -166,7 +218,7 @@ export default function App() {
     });
 
     const unsubCerts = subscribeCertificates((data) => {
-      if (data && data.length > 0) setCertificates(data);
+      setCertificates((data || []).filter(c => c.id !== 'cert-1'));
     });
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
@@ -440,6 +492,26 @@ export default function App() {
       showToast(`تم تسجيل واعتماد ${hours} ساعات في رصيدك بنجاح!`);
     } else {
       showToast(`تم رفع تقريرك بنجاح (${hours} ساعات). بانتظار مصادقة مدير دار الشباب.`);
+    }
+  };
+
+  // Clear all volunteer names and records completely
+  const handleClearAllVolunteers = async () => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في تفريغ وحذف جميع المتطوعين والأسماء من النظام وقاعدة البيانات نهائياً؟')) {
+      return;
+    }
+    try {
+      await clearAllVolunteersFromDatabase();
+      setVolunteers([]);
+      setTransactions([]);
+      localStorage.removeItem('timebank_volunteers');
+      localStorage.removeItem('timebank_transactions');
+      localStorage.setItem('timebank_current_vol_id', '');
+      setCurrentVolunteerId('');
+      showToast('تم تفريغ وحذف جميع الأسماء والمتطوعين بنجاح.');
+    } catch (err) {
+      console.error(err);
+      showToast('حدث خطأ أثناء تفريغ الأسماء.');
     }
   };
 
@@ -890,6 +962,7 @@ export default function App() {
               onToggleVolunteerStatus={handleToggleVolunteerStatus}
               onCreateVolunteer={handleCreateVolunteer}
               onUpdateVolunteer={handleUpdateVolunteer}
+              onClearAllVolunteers={handleClearAllVolunteers}
             />
           ) : (
             <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center max-w-lg mx-auto my-8 shadow-sm space-y-4">

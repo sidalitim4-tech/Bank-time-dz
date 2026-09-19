@@ -26,15 +26,38 @@ const PERKS_COLLECTION = 'perks';
 const CERTIFICATES_COLLECTION = 'certificates';
 
 /**
- * Seeds initial mock data to Firestore if collections are empty.
+ * Seeds initial mock data to Firestore if collections are empty, and cleans up any old mock volunteers.
  */
 export async function seedInitialDataIfEmpty(): Promise<void> {
   try {
-    const volSnap = await getDocs(collection(db, VOLUNTEERS_COLLECTION));
-    if (volSnap.empty) {
-      for (const vol of INITIAL_VOLUNTEERS) {
-        await setDoc(doc(db, VOLUNTEERS_COLLECTION, vol.id), vol);
+    // 1. Clean up any previously seeded mock volunteers from Firestore
+    try {
+      const volSnap = await getDocs(collection(db, VOLUNTEERS_COLLECTION));
+      const mockVolIds = ['vol-1', 'vol-2', 'vol-3', 'vol-4'];
+      for (const docSnap of volSnap.docs) {
+        if (mockVolIds.includes(docSnap.id)) {
+          await deleteDoc(doc(db, VOLUNTEERS_COLLECTION, docSnap.id));
+        }
       }
+
+      // Also clean up mock sample transactions
+      const txSnap = await getDocs(collection(db, TRANSACTIONS_COLLECTION));
+      const mockTxIds = ['tx-1', 'tx-2', 'tx-3', 'tx-4', 'tx-5', 'tx-6'];
+      for (const docSnap of txSnap.docs) {
+        if (mockTxIds.includes(docSnap.id)) {
+          await deleteDoc(doc(db, TRANSACTIONS_COLLECTION, docSnap.id));
+        }
+      }
+
+      // Clean up mock cert
+      const certSnap = await getDocs(collection(db, CERTIFICATES_COLLECTION));
+      for (const docSnap of certSnap.docs) {
+        if (docSnap.id === 'cert-1') {
+          await deleteDoc(doc(db, CERTIFICATES_COLLECTION, docSnap.id));
+        }
+      }
+    } catch (cleanErr) {
+      console.warn('Mock cleanup note:', cleanErr);
     }
 
     const opSnap = await getDocs(collection(db, OPPORTUNITIES_COLLECTION));
@@ -44,28 +67,32 @@ export async function seedInitialDataIfEmpty(): Promise<void> {
       }
     }
 
-    const txSnap = await getDocs(collection(db, TRANSACTIONS_COLLECTION));
-    if (txSnap.empty) {
-      for (const tx of INITIAL_TRANSACTIONS) {
-        await setDoc(doc(db, TRANSACTIONS_COLLECTION, tx.id), tx);
-      }
-    }
-
     const perkSnap = await getDocs(collection(db, PERKS_COLLECTION));
     if (perkSnap.empty) {
       for (const perk of INITIAL_PERKS) {
         await setDoc(doc(db, PERKS_COLLECTION, perk.id), perk);
       }
     }
-
-    const certSnap = await getDocs(collection(db, CERTIFICATES_COLLECTION));
-    if (certSnap.empty) {
-      for (const cert of INITIAL_CERTIFICATES) {
-        await setDoc(doc(db, CERTIFICATES_COLLECTION, cert.id), cert);
-      }
-    }
   } catch (error) {
     console.warn('Initial Firestore seed check completed or restricted by security rules:', error);
+  }
+}
+
+/**
+ * Permanently delete all volunteer names and records from Firestore
+ */
+export async function clearAllVolunteersFromDatabase(): Promise<void> {
+  try {
+    const volSnap = await getDocs(collection(db, VOLUNTEERS_COLLECTION));
+    for (const docSnap of volSnap.docs) {
+      await deleteDoc(doc(db, VOLUNTEERS_COLLECTION, docSnap.id));
+    }
+    const txSnap = await getDocs(collection(db, TRANSACTIONS_COLLECTION));
+    for (const docSnap of txSnap.docs) {
+      await deleteDoc(doc(db, TRANSACTIONS_COLLECTION, docSnap.id));
+    }
+  } catch (err) {
+    console.error('Error clearing volunteers from database:', err);
   }
 }
 
@@ -81,8 +108,11 @@ export function subscribeVolunteers(
     colRef,
     (snapshot) => {
       const items: Volunteer[] = [];
+      const mockIds = ['vol-1', 'vol-2', 'vol-3', 'vol-4'];
       snapshot.forEach((docSnap) => {
-        items.push(docSnap.data() as Volunteer);
+        if (!mockIds.includes(docSnap.id)) {
+          items.push(docSnap.data() as Volunteer);
+        }
       });
       onUpdate(items);
     },

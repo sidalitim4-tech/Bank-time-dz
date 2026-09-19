@@ -56,6 +56,7 @@ interface DarChababAdminViewProps {
   onToggleVolunteerStatus?: (volunteerId: string) => void;
   onCreateVolunteer?: (volunteer: Volunteer) => void;
   onUpdateVolunteer?: (volunteerId: string, updates: Partial<Volunteer>) => void;
+  onClearAllVolunteers?: () => void;
 }
 
 export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
@@ -74,6 +75,7 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
   onToggleVolunteerStatus,
   onCreateVolunteer,
   onUpdateVolunteer,
+  onClearAllVolunteers,
 }) => {
   const [activeAdminTab, setActiveAdminTab] = useState<'roster' | 'analytics' | 'pending' | 'activities'>('roster');
   const [searchTerm, setSearchTerm] = useState('');
@@ -357,6 +359,17 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
                 </button>
               )}
 
+              {onClearAllVolunteers && (
+                <button
+                  onClick={onClearAllVolunteers}
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-2xs"
+                  title="إفراغ وتفريغ جميع الأسماء وحذفها نهائياً من الموقع وقاعدة البيانات"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-600" />
+                  <span>إفراغ كل الأسماء</span>
+                </button>
+              )}
+
               <div className="relative flex-1 sm:w-56">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -385,16 +398,31 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {volunteers
-                  .filter(
+                {(() => {
+                  const filteredVolunteers = volunteers.filter(
                     (v) =>
                       v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                       (v.phone && v.phone.includes(searchTerm)) ||
                       (v.email && v.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
                       (v.wilaya && v.wilaya.toLowerCase().includes(searchTerm.toLowerCase())) ||
                       v.skills.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase()))
-                  )
-                  .map((v) => {
+                  );
+
+                  if (filteredVolunteers.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-slate-400">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Users className="w-8 h-8 text-slate-300" />
+                            <p className="text-xs font-semibold text-slate-700">لا توجد أي أسماء مسجلة حالياً في النظام</p>
+                            <p className="text-[11px] text-slate-400">تم إفراغ الموقع بالكامل. يمكنك إضافة متطوعين جدد متى شئت.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return filteredVolunteers.map((v) => {
                     const isSuspended = v.status === 'معطل';
 
                     return (
@@ -552,7 +580,8 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
 
                       </tr>
                     );
-                  })}
+                  });
+                })()}
               </tbody>
             </table>
           </div>
