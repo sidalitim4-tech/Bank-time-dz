@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { ActivityOpportunity, Volunteer } from '../types';
 import {
   Calendar,
@@ -13,9 +13,7 @@ import {
   Send,
   UserPlus,
   Shield,
-  Phone,
 } from 'lucide-react';
-import { OpportunityParticipantsModal } from './OpportunityParticipantsModal';
 
 interface OpportunityCardProps {
   activity: ActivityOpportunity;
@@ -30,14 +28,11 @@ interface OpportunityCardProps {
 export const OpportunityCard: FC<OpportunityCardProps> = ({
   activity,
   currentVolunteer,
-  volunteers = [],
   onToggleJoin,
   onEditOpportunity,
   onFinishAndDistributeHours,
   isAdminMode = false,
 }) => {
-  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-
   const isJoined = currentVolunteer
     ? activity.registeredVolunteerIds.includes(currentVolunteer.id)
     : false;
@@ -77,7 +72,7 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
     <div
       className={`bg-white rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden group ${
         isSuspended
-          ? 'border-rose-300 bg-rose-50/20'
+          ? 'border-rose-300 bg-rose-50/15'
           : isCompleted
           ? 'border-emerald-200/80 bg-emerald-50/20'
           : isCreator
@@ -150,12 +145,12 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
           </div>
         </div>
 
-        {/* Volunteers Progress & Joined Participants */}
+        {/* Volunteers Progress - Strictly Numerical for Privacy */}
         <div className="mt-4 pt-3 border-t border-slate-100">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-slate-600 flex items-center gap-1 font-semibold">
               <Users className="w-3.5 h-3.5 text-slate-400" />
-              المتطوعون المسجلون:
+              المقاعد والمشاركون:
             </span>
             <span className="font-extrabold text-slate-900">
               {activity.registeredVolunteerIds.length} من {activity.requiredVolunteers}
@@ -174,36 +169,10 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
             />
           </div>
 
-          {/* Only Admin can view volunteer details / phone numbers. For public/volunteers, only show general progress count */}
-          {isAdminMode ? (
-            <div className="mt-2.5 pt-2 border-t border-slate-100/80">
-              <div className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowParticipantsModal(true)}
-                  className="text-[11px] font-bold text-slate-800 hover:text-white bg-slate-100 hover:bg-slate-900 border border-slate-200 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-2xs"
-                  title="عرض بيانات وهواتف المتطوعين المسجلين (خاص بإدارة دار الشباب)"
-                >
-                  <Users className="w-3.5 h-3.5 text-amber-500" />
-                  <span>
-                    {activity.registeredVolunteerIds.length > 0
-                      ? `سجل المنضمين (${activity.registeredVolunteerIds.length}) • هواتف وأسماء`
-                      : 'سجل المنضمين (0)'}
-                  </span>
-                </button>
-
-                <span className="text-[10px] text-slate-400">
-                  نسبة التسجيل: {percentFilled}%
-                </span>
-              </div>
-            </div>
-          ) : (
-            /* Public / Regular volunteers view: strictly numerical progress for privacy */
-            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-              <span>نسبة اكتمال العدد المطلوب: {percentFilled}%</span>
-              <span>{Math.max(0, activity.requiredVolunteers - activity.registeredVolunteerIds.length)} مقعد متاح</span>
-            </div>
-          )}
+          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+            <span>نسبة التسجيل: {percentFilled}%</span>
+            <span>{Math.max(0, activity.requiredVolunteers - activity.registeredVolunteerIds.length)} مقعد شاغر</span>
+          </div>
         </div>
 
         {/* Informational Creator / Completion Note */}
@@ -211,21 +180,21 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
           <div className="mt-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl p-2.5 text-[11px] flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              انتهت هذه الحملة بنجاح، وتم إرسال واعتماد <strong>{activity.durationHours} ساعات</strong> تلقائياً لجميع المتطوعين المسجلين.
+              انتهت هذه الحملة بنجاح، وتم اعتماد <strong>{activity.durationHours} ساعات</strong> آلياً لجميع المشاركين.
             </span>
           </div>
         ) : isCreator ? (
           <div className="mt-3 bg-amber-50/70 border border-amber-200/60 text-amber-900 rounded-xl p-2 text-[11px] flex items-center justify-between">
             <span className="flex items-center gap-1.5 font-medium">
               <UserCheck className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-              بصفتك منشئ المبادرة: يمكنك إنهاؤها وإرسال الساعات فوراً للمسجلين.
+              بصفتك منشئ المبادرة: يمكنك إنهاؤها وإرسال الساعات للمسجلين.
             </span>
           </div>
         ) : (
           <div className="mt-3 text-[11px] text-slate-500 flex items-center gap-1">
             <Lock className="w-3 h-3 text-slate-400 shrink-0" />
             <span>
-              المخول الوحيد بتعديل المبادرة واعتماد الساعات: <strong>{activity.creatorVolunteerName || 'منشئ المبادرة'}</strong>
+              إشراف وتنسيق: <strong>{activity.creatorVolunteerName || 'دار الشباب الروينة'}</strong>
             </span>
           </div>
         )}
@@ -233,11 +202,10 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
 
       {/* Action Footer */}
       <div className="p-4 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        {/* Requirement 3: Admin cannot register in campaigns */}
         {isAdminMode ? (
           <div className="flex-1 text-xs font-semibold py-2.5 px-3 rounded-xl bg-amber-50/80 text-amber-900 border border-amber-200/80 text-center flex items-center justify-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-amber-600" />
-            <span>صفة إدارية إشرافية (لا تسجل الإدارة في الحملات)</span>
+            <span>صفة إدارية إشرافية (معلومات المسجلين متاحة في البانل)</span>
           </div>
         ) : isSuspended ? (
           <div className="flex-1 text-xs font-bold py-2.5 px-3 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-center flex items-center justify-center gap-1.5">
@@ -278,37 +246,29 @@ export const OpportunityCard: FC<OpportunityCardProps> = ({
           </button>
         )}
 
-        {/* Creator-exclusive Action: Edit & End Campaign with Auto Hour Distribution */}
+        {/* Creator Actions: Edit & End Campaign */}
         {isCreator && !isCompleted && (
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => onEditOpportunity(activity)}
               className="text-xs font-semibold py-2.5 px-3 rounded-xl text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 transition flex items-center gap-1 shrink-0"
-              title="تعديل نص وتفاصيل المبادرة"
+              title="تعديل تفاصيل المبادرة"
             >
               <Edit3 className="w-3.5 h-3.5 text-slate-600" />
-              <span>تعديل المنشور</span>
+              <span>تعديل</span>
             </button>
 
             <button
               onClick={() => onFinishAndDistributeHours(activity)}
               className="text-xs font-bold py-2.5 px-3.5 rounded-xl text-white bg-slate-900 hover:bg-black transition flex items-center gap-1.5 shadow-xs shrink-0"
-              title="إنهاء الحملة وإرسال الساعات المكتسبة فوراً لكل المتطوعين المسجلين"
+              title="إنهاء الحملة وتوزيع الساعات تلقائياً لكل المتطوعين المسجلين"
             >
               <Send className="w-3.5 h-3.5 text-amber-400" />
-              <span>إنهاء وإرسال الساعات تلقائياً ({activity.registeredVolunteerIds.length})</span>
+              <span>إنهاء واعتماد الساعات</span>
             </button>
           </div>
         )}
       </div>
-
-      {/* Participants Modal displaying registered volunteer names & phone numbers */}
-      <OpportunityParticipantsModal
-        isOpen={showParticipantsModal}
-        onClose={() => setShowParticipantsModal(false)}
-        activity={activity}
-        volunteers={volunteers}
-      />
     </div>
   );
 };
