@@ -90,3 +90,26 @@ export interface Certificate {
   issuedBy: string; // e.g. "دار الشباب الروينة - ديوان مؤسسات الشباب - مديرية الشباب والرياضة لولاية عين الدفلى"
   qrHash: string;
 }
+
+export type NotificationType = 
+  | 'hours' 
+  | 'opportunity' 
+  | 'perk' 
+  | 'certificate' 
+  | 'announcement' 
+  | 'volunteer'
+  | 'system';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  timestamp: string;
+  read: boolean;
+  targetVolunteerId?: string; // 'all' or specific volunteerId or 'admin'
+  targetRole?: 'all' | 'volunteer' | 'admin';
+  linkTab?: 'opportunities' | 'ledger' | 'perks' | 'certificates' | 'admin';
+  actionLabel?: string;
+  badge?: string;
+}

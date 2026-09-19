@@ -9,13 +9,14 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { Volunteer, ActivityOpportunity, TimeTransaction, Perk, Certificate } from '../types';
+import { Volunteer, ActivityOpportunity, TimeTransaction, Perk, Certificate, AppNotification } from '../types';
 import {
   INITIAL_VOLUNTEERS,
   INITIAL_OPPORTUNITIES,
   INITIAL_TRANSACTIONS,
   INITIAL_PERKS,
   INITIAL_CERTIFICATES,
+  INITIAL_NOTIFICATIONS,
 } from '../data/initialData';
 
 // Collection Paths
@@ -24,6 +25,7 @@ const OPPORTUNITIES_COLLECTION = 'opportunities';
 const TRANSACTIONS_COLLECTION = 'transactions';
 const PERKS_COLLECTION = 'perks';
 const CERTIFICATES_COLLECTION = 'certificates';
+const NOTIFICATIONS_COLLECTION = 'notifications';
 
 /**
  * Seeds initial mock data to Firestore if collections are empty, and cleans up any old mock volunteers.
@@ -71,6 +73,13 @@ export async function seedInitialDataIfEmpty(): Promise<void> {
     if (perkSnap.empty) {
       for (const perk of INITIAL_PERKS) {
         await setDoc(doc(db, PERKS_COLLECTION, perk.id), perk);
+      }
+    }
+
+    const notifSnap = await getDocs(collection(db, NOTIFICATIONS_COLLECTION));
+    if (notifSnap.empty) {
+      for (const notif of INITIAL_NOTIFICATIONS) {
+        await setDoc(doc(db, NOTIFICATIONS_COLLECTION, notif.id), notif);
       }
     }
   } catch (error) {
@@ -327,6 +336,99 @@ export async function deleteOpportunityDoc(opportunityId: string): Promise<void>
     await deleteDoc(doc(db, OPPORTUNITIES_COLLECTION, opportunityId));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+/**
+ * Subscribe to Notifications in real-time
+ */
+export function subscribeNotifications(
+  onUpdate: (notifs: AppNotification[]) => void,
+  onError?: (err: Error) => void
+): Unsubscribe {
+  const colRef = collection(db, NOTIFICATIONS_COLLECTION);
+  return onSnapshot(
+    colRef,
+    (snapshot) => {
+      const items: AppNotification[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as AppNotification);
+      });
+      // Sort newest first
+      items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      onUpdate(items);
+    },
+    (error) => {
+      try {
+        handleFirestoreError(error, OperationType.GET, NOTIFICATIONS_COLLECTION);
+      } catch (e) {
+        if (onError) onError(e as Error);
+      }
+    }
+  );
+}
+
+/**
+ * Save notification doc
+ */
+export async function saveNotificationDoc(notification: AppNotification): Promise<void> {
+  const path = `${NOTIFICATIONS_COLLECTION}/${notification.id}`;
+  try {
+    await setDoc(doc(db, NOTIFICATIONS_COLLECTION, notification.id), notification);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Mark a notification as read
+ */
+export async function markNotificationReadDoc(notificationId: string): Promise<void> {
+  const path = `${NOTIFICATIONS_COLLECTION}/${notificationId}`;
+  try {
+    await updateDoc(doc(db, NOTIFICATIONS_COLLECTION, notificationId), { read: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+/**
+ * Mark all given notifications as read
+ */
+export async function markAllNotificationsReadDoc(notificationIds: string[]): Promise<void> {
+  for (const id of notificationIds) {
+    const path = `${NOTIFICATIONS_COLLECTION}/${id}`;
+    try {
+      await updateDoc(doc(db, NOTIFICATIONS_COLLECTION, id), { read: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  }
+}
+
+/**
+ * Delete a notification doc
+ */
+export async function deleteNotificationDoc(notificationId: string): Promise<void> {
+  const path = `${NOTIFICATIONS_COLLECTION}/${notificationId}`;
+  try {
+    await deleteDoc(doc(db, NOTIFICATIONS_COLLECTION, notificationId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+/**
+ * Clear all notifications
+ */
+export async function clearAllNotificationsDoc(notificationIds: string[]): Promise<void> {
+  for (const id of notificationIds) {
+    const path = `${NOTIFICATIONS_COLLECTION}/${id}`;
+    try {
+      await deleteDoc(doc(db, NOTIFICATIONS_COLLECTION, id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+    }
   }
 }
 

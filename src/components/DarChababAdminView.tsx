@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Volunteer, ActivityOpportunity, TimeTransaction } from '../types';
+import { Volunteer, ActivityOpportunity, TimeTransaction, AppNotification } from '../types';
 import {
   Building2,
   CheckCircle2,
@@ -28,17 +28,21 @@ import {
   PlusCircle,
   MinusCircle,
   Phone,
+  Megaphone,
+  Bell,
 } from 'lucide-react';
 import { AdminAnalyticsCharts } from './AdminAnalyticsCharts';
 import { AdminAdjustHoursModal } from './AdminAdjustHoursModal';
 import { AdminCreateVolunteerModal } from './AdminCreateVolunteerModal';
 import { AdminEditVolunteerModal } from './AdminEditVolunteerModal';
 import { OpportunityParticipantsModal } from './OpportunityParticipantsModal';
+import { BroadcastNotificationModal } from './BroadcastNotificationModal';
 
 interface DarChababAdminViewProps {
   volunteers: Volunteer[];
   opportunities: ActivityOpportunity[];
   transactions: TimeTransaction[];
+  notifications?: AppNotification[];
   onApproveTransaction: (txId: string) => void;
   onOpenCreateOpportunityModal: () => void;
   onLogout?: () => void;
@@ -57,6 +61,8 @@ interface DarChababAdminViewProps {
   onCreateVolunteer?: (volunteer: Volunteer) => void;
   onUpdateVolunteer?: (volunteerId: string, updates: Partial<Volunteer>) => void;
   onClearAllVolunteers?: () => void;
+  onSendNotification?: (notification: AppNotification) => void;
+  onDeleteNotification?: (id: string) => void;
 }
 
 export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
@@ -76,8 +82,11 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
   onCreateVolunteer,
   onUpdateVolunteer,
   onClearAllVolunteers,
+  notifications = [],
+  onSendNotification,
+  onDeleteNotification,
 }) => {
-  const [activeAdminTab, setActiveAdminTab] = useState<'roster' | 'analytics' | 'pending' | 'activities'>('roster');
+  const [activeAdminTab, setActiveAdminTab] = useState<'roster' | 'analytics' | 'pending' | 'activities' | 'notifications'>('roster');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modals state
@@ -88,6 +97,7 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
   const [isEditVolunteerModalOpen, setIsEditVolunteerModalOpen] = useState(false);
   const [selectedOpForParticipants, setSelectedOpForParticipants] = useState<ActivityOpportunity | null>(null);
   const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
 
   // Pending transactions awaiting youth center approval
   const pendingTransactions = transactions.filter((tx) => tx.status === 'قيد المراجعة');
@@ -156,9 +166,19 @@ export const DarChababAdminView: FC<DarChababAdminViewProps> = ({
             <button
               onClick={onOpenCreateOpportunityModal}
               className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-xs shrink-0"
+              title="إضافة ونشر مبادرة تطوعية جديدة حصرياً عبر البانل"
             >
               <Plus className="w-4 h-4" />
               <span>نشر مبادرة جديدة</span>
+            </button>
+
+            <button
+              onClick={() => setIsBroadcastModalOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-xs shrink-0"
+              title="إرسال إشعار وبث تنبيه لجميع المتطوعين"
+            >
+              <Megaphone className="w-4 h-4 text-amber-300" />
+              <span>بث إشعار للشباب</span>
             </button>
 
             {onLogout && (

@@ -16,6 +16,9 @@ service cloud.firestore {
     match /certificates/{certificateId} {
       allow read, write: if true;
     }
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

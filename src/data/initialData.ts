@@ -1,4 +1,4 @@
-import { Volunteer, ActivityOpportunity, TimeTransaction, Perk, Certificate } from '../types';
+import { Volunteer, ActivityOpportunity, TimeTransaction, Perk, Certificate, AppNotification } from '../types';
 
 export const INITIAL_VOLUNTEERS: Volunteer[] = [];
 
@@ -178,3 +178,44 @@ export const INITIAL_PERKS: Perk[] = [
 ];
 
 export const INITIAL_CERTIFICATES: Certificate[] = [];
+
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif-1',
+    title: 'مرحباً بك في بنك الوقت بدار الشباب الروينة!',
+    message: 'تم إطلاق النسخة الرسمية لمنصة التطوع وتبادل الساعات. انضم للمبادرات وساهم في خدمة مجتمعك.',
+    type: 'system',
+    timestamp: new Date().toISOString(),
+    read: false,
+    targetVolunteerId: 'all',
+    targetRole: 'all',
+    linkTab: 'opportunities',
+    actionLabel: 'استكشف المبادرات',
+    badge: 'ترحيب'
+  },
+  {
+    id: 'notif-2',
+    title: 'مبادرة جديدة: حملة التشجير الكبرى بغابة سيدي معمر',
+    message: 'فتحت دار الشباب الروينة باب التسجيل في حملة التشجير الميدانية. بادر بحجز مقعدك واكسب 4 ساعات تطوعية.',
+    type: 'opportunity',
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    read: false,
+    targetVolunteerId: 'all',
+    targetRole: 'all',
+    linkTab: 'opportunities',
+    actionLabel: 'تفاصيل المبادرة',
+    badge: 'مبادرة ميدانية'
+  },
+  {
+    id: 'notif-3',
+    title: 'إعلان من إدارة دار الشباب الروينة',
+    message: 'تذكير: جميع المبادرات والأنشطة تخضع لإشراف ومتابعة ديوان مؤسسات الشباب لولاية عين الدفلى لضمان اعتماد الساعات بدقة.',
+    type: 'announcement',
+    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    read: true,
+    targetVolunteerId: 'all',
+    targetRole: 'all',
+    actionLabel: 'علم',
+    badge: 'إعلان إداري'
+  }
+];

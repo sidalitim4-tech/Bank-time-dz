@@ -9,9 +9,8 @@ interface OpportunitiesViewProps {
   volunteers?: Volunteer[];
   onToggleJoin: (activityId: string) => void;
   onLogHoursForActivity: (activity: ActivityOpportunity) => void;
-  onOpenCreateOpportunityModal: () => void;
-  onEditOpportunity: (activity: ActivityOpportunity) => void;
-  onFinishAndDistributeHours: (activity: ActivityOpportunity) => void;
+  onEditOpportunity?: (activity: ActivityOpportunity) => void;
+  onFinishAndDistributeHours?: (activity: ActivityOpportunity) => void;
   isAdminMode?: boolean;
   onOpenAuthModal?: (tab?: 'login' | 'register') => void;
 }
@@ -31,7 +30,6 @@ export const OpportunitiesView: FC<OpportunitiesViewProps> = ({
   volunteers = [],
   onToggleJoin,
   onLogHoursForActivity,
-  onOpenCreateOpportunityModal,
   onEditOpportunity,
   onFinishAndDistributeHours,
   isAdminMode = false,
@@ -107,13 +105,10 @@ export const OpportunitiesView: FC<OpportunitiesViewProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenCreateOpportunityModal}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-xs shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>إضافة مبادرة تطوعية جديدة (للمؤسسات والجمعيات)</span>
-        </button>
+        <div className="flex items-center gap-2 bg-slate-100/90 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 shrink-0">
+          <Building2 className="w-4 h-4 text-amber-600" />
+          <span>إضافة ونشر المبادرات حصري لإدارة دار الشباب عبر البانل الإداري</span>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
