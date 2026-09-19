@@ -893,19 +893,19 @@ export default function App() {
             />
           ) : (
             <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center max-w-lg mx-auto my-8 shadow-sm space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center mx-auto border border-slate-200">
                 <Lock className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">هذه الصفحة محمية وخاصة بإدارة دار الشباب</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                لا يمكن لأي شخص الاطلاع على محتوى لوحة الإدارة ومصادقة الساعات إلا بعد إدخال رمز المرور السري المخصص لمسؤول المؤسسة.
+              <h3 className="text-lg font-bold text-slate-900">تسجيل الدخول</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                يرجى تسجيل الدخول للمتابعة.
               </p>
               <button
                 onClick={() => setIsAdminAuthModalOpen(true)}
                 className="bg-slate-900 hover:bg-black text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2 mx-auto shadow-xs"
               >
-                <KeyRound className="w-4 h-4 text-amber-400" />
-                <span>إدخال رمز المرور لفتح اللوحة</span>
+                <Lock className="w-4 h-4" />
+                <span>تسجيل الدخول</span>
               </button>
             </div>
           )
@@ -941,10 +941,9 @@ export default function App() {
               <button
                 onClick={() => setIsAdminAuthModalOpen(true)}
                 className="text-[11px] text-slate-400 hover:text-slate-600 flex items-center gap-1 transition opacity-70 hover:opacity-100"
-                title="دخول مخصص لإدارة دار الشباب الروينة فقط"
               >
-                <Shield className="w-3 h-3" />
-                <span>فضاء إشراف المؤسسة</span>
+                <Lock className="w-3 h-3" />
+                <span>تسجيل دخول</span>
               </button>
             )}
           </div>

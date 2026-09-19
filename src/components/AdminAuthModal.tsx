@@ -1,5 +1,5 @@
 import { FC, useState, FormEvent } from 'react';
-import { Shield, Lock, Eye, EyeOff, X, AlertCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, X, AlertCircle } from 'lucide-react';
 
 interface AdminAuthModalProps {
   isOpen: boolean;
@@ -16,31 +16,27 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // Designated admin passcode
     if (pin.trim() === '200644') {
       setError(null);
       setPin('');
       onSuccess();
       onClose();
     } else {
-      setError('رمز المرور غير صحيح. يرجى إدخال رمز الدخول المعتمد: 200644');
+      setError('رمز المرور غير صحيح. يرجى المحاولة مرة أخرى.');
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
         
-        {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-400 flex items-center justify-center">
-              <Shield className="w-5 h-5" />
+        {/* Header - Simple 'تسجيل دخول' without extra details */}
+        <div className="bg-slate-900 text-white p-4.5 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-amber-400 flex items-center justify-center">
+              <Lock className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">منطقة الإدارة والمصادقة</h3>
-              <p className="text-[11px] text-slate-300">دار الشباب الروينة • ديوان مؤسسات الشباب • مديرية الشباب والرياضة</p>
-            </div>
+            <h3 className="text-sm font-bold text-white">تسجيل دخول</h3>
           </div>
           <button
             onClick={() => {
@@ -54,18 +50,11 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
           </button>
         </div>
 
-        {/* Content & Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-right">
-          <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
-            <p className="font-semibold">تنبيه حماية الخصوصية:</p>
-            <p className="mt-0.5 text-amber-800">
-              هذه اللوحة خاصة بمسؤولي دار الشباب والجمعيات الشريكة لمراجعة طلبات ساعات التطوع والمصادقة عليها، وتفاصيل المتطوعين محمية ضد الوصول العام.
-            </p>
-          </div>
-
+        {/* Content & Form - Clean and without details or exposed credentials */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-right">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              رمز المرور الإداري (PIN):
+              رمز المرور:
             </label>
             <div className="relative">
               <input
@@ -78,7 +67,7 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
                   setPin(e.target.value);
                   if (error) setError(null);
                 }}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 pl-10 text-sm font-mono focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3.5 pl-10 text-sm font-mono focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition"
               />
               <button
                 type="button"
@@ -88,11 +77,6 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
                 {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            
-            <p className="text-[11px] text-slate-400 mt-1.5 flex items-center justify-between">
-              <span>رمز المرور المعتمد: <strong className="text-slate-700 font-mono">200644</strong></span>
-              <Lock className="w-3 h-3 text-slate-400" />
-            </p>
           </div>
 
           {error && (
@@ -105,10 +89,10 @@ export const AdminAuthModal: FC<AdminAuthModalProps> = ({ isOpen, onClose, onSuc
           <div className="pt-2 flex items-center gap-2.5">
             <button
               type="submit"
-              className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2.5 px-4 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5"
+              className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span>تسجيل الدخول إلى لوحة الإدارة</span>
+              <span>تسجيل الدخول</span>
             </button>
             <button
               type="button"
